@@ -1,33 +1,48 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class LessonsController : MonoBehaviour
 {
-    public Transform lessonListContent;
-    public GameObject lessonItemPrefab;
     public Text headerTitle;
+    public Transform lessonsListContent; // LessonsScroll -> Viewport -> Content
+    public GameObject lessonItemPrefab; // LessonItemPrefab
 
     private Course currentCourse;
 
-    public void SetCourse(Course course)
+    public void OpenCourse(Course course)
     {
         currentCourse = course;
-        headerTitle.text = course.name;
-        Refresh();
+        if (headerTitle != null) headerTitle.text = course.name;
+        RefreshList();
+        gameObject.SetActive(true);
     }
 
-    void Refresh()
+    public void RefreshList()
     {
-        foreach (Transform t in lessonListContent) Destroy(t.gameObject);
+        if (lessonsListContent == null || lessonItemPrefab == null || currentCourse == null) return;
+        foreach (Transform t in lessonsListContent) Destroy(t.gameObject);
+
         foreach (var lesson in currentCourse.lessons)
         {
-            var go = Instantiate(lessonItemPrefab, lessonListContent);
-            var title = go.transform.Find("Title").GetComponent<Text>();
-            var stars = go.transform.Find("Stars").GetComponent<Text>();
-            title.text = lesson.title;
-            stars.text = $"Stars: {lesson.stars}";
+            var go = Instantiate(lessonItemPrefab, lessonsListContent);
+            var txt = go.GetComponentInChildren<Text>();
+            if (txt != null) txt.text = $"{lesson.id}. {lesson.title}";
             var btn = go.GetComponent<Button>();
-            btn.onClick.AddListener(() => UIManager.Instance.ShowPlaceholder($"«десь будет квиз: {lesson.title}"));
+            if (btn != null)
+            {
+                var captured = lesson;
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() => OnLessonClicked(captured));
+            }
         }
+    }
+
+    void OnLessonClicked(Lesson lesson)
+    {
+        // ƒл€ начала Ч показываем Placeholder с информацией
+        var placeholder = FindObjectOfType<PlaceholderPanel>();
+        if (placeholder != null) placeholder.Show($"ќткрыт урок: {lesson.title}");
+        // «десь можно открыть сцену урока, тест или контент
     }
 }

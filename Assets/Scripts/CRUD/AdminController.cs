@@ -1,76 +1,137 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class AdminController : MonoBehaviour
 {
-    public InputField newCourseName;
-    public Button addCourseBtn;
-    public CoursesController coursesController;
+    public InputField courseNameInput;
+    public Button saveCourseBtn;
+    public Transform lessonsListContent;
+    public GameObject lessonItemPrefab;
+    public InputField newLessonTitleInput;
+    public Button addLessonBtn;
+    public Button closeAdminBtn;
+
     private CoursesContainer coursesData;
+    private Course editingCourse;
 
     void Start()
     {
         coursesData = DataManager.LoadCourses();
-        addCourseBtn.onClick.AddListener(OnAddCourse);
-    }
-
-    void OnAddCourse()
-    {
-        string name = newCourseName.text.Trim();
-        if (string.IsNullOrEmpty(name)) return;
-        var c = new Course
+        if (saveCourseBtn != null)
         {
-            id = DataManager.NextCourseId(coursesData),
-            name = name
-        };
-        coursesData.courses.Add(c);
-        DataManager.SaveCourses(coursesData);
-        newCourseName.text = "";
-        coursesController.RefreshList();
+            saveCourseBtn.onClick.RemoveAllListeners();
+            saveCourseBtn.onClick.AddListener(OnSaveCourseName);
+        }
+        if (addLessonBtn != null)
+        {
+            addLessonBtn.onClick.RemoveAllListeners();
+            addLessonBtn.onClick.AddListener(OnAddLesson);
+        }
+        if (closeAdminBtn != null)
+        {
+            closeAdminBtn.onClick.RemoveAllListeners();
+            closeAdminBtn.onClick.AddListener(Close);
+        }
+        gameObject.SetActive(false);
     }
 
-    public void DeleteCourse(Course course)
+    public void OpenCourseEditor(Course course)
     {
-        coursesData.courses.RemoveAll(x => x.id == course.id);
-        DataManager.SaveCourses(coursesData);
-        coursesController.RefreshList();
+        if (course == null) return;
+        // Загружаем актуальные данные и находим курс по id
+        coursesData = DataManager.LoadCourses();
+        editingCourse = coursesData.courses.Find(c => c.id == course.id);
+        if (editingCourse == null)
+        {
+            // Если курс не найден в контейнере, используем переданный объект и добавляем в контейнер
+            editingCourse = course;
+            if (!coursesData.courses.Any(c => c.id == editingCourse.id))
+                coursesData.courses.Add(editingCourse);
+        }
+
+        if (courseNameInput != null) courseNameInput.text = editingCourse.name;
+        RefreshLessonsEditor();
+        gameObject.SetActive(true);
+
+        // при необходимости обновляем UIManager
+        if (UIManager.Instance != null) UIManager.Instance.ShowAdminPanel();
     }
 
-    public void EditCourseName(Course course, string newName)
+    public void Close()
     {
-        var c = coursesData.courses.Find(x => x.id == course.id);
-        if (c == null) return;
-        c.name = newName;
-        DataManager.SaveCourses(coursesData);
-        coursesController.RefreshList();
+        gameObject.SetActive(false);
     }
 
-    public void AddLesson(Course course, string lessonTitle)
+    void RefreshLessonsEditor()
     {
-        var c = coursesData.courses.Find(x => x.id == course.id);
-        if (c == null) return;
-        var l = new Lesson { id = DataManager.NextLessonId(c), title = lessonTitle, stars = 0 };
-        c.lessons.Add(l);
-        DataManager.SaveCourses(coursesData);
-        coursesController.RefreshList();
+        if (lessonsListContent == null || editingCourse == null) return;
+        // Очистка контейнера
+        foreach (Transform t in lessonsListContent) Destroy(t.gameObject);
+
+        foreach (var lesson in editingCourse.lessons)
+        {
+            var go = Instantiate(lessonItemPrefab, lessonsListContent);
+            var txt = go.GetComponentInChildren<Text>();
+            if (txt != null) txt.text = $"{lesson.id}. {lesson.title}";
+
+            var deleteBtn = go.transform.Find("DeleteBtn")?.GetComponent<Button>();
+            if (deleteBtn != null)
+            {
+                var captured = lesson;
+                deleteBtn.onClick.RemoveAllListeners();
+                deleteBtn.onClick.AddListener(() => {
+                    DeleteLesson(captured);
+                });
+            }
+
+            var renameBtn = go.transform.Find("RenameBtn")?.GetComponent<Button>();
+            if (renameBtn != null)
+            {
+                var captured = lesson;
+                renameBtn.onClick.RemoveAllListeners();
+                renameBtn.onClick.AddListener(() => {
+                    if (newLessonTitleInput != null) newLessonTitleInput.text = captured.title;
+                    // можно хранить editingLessonForRename = captured для подтверждения переименования
+                });
+            }
+        }
     }
 
-    public void DeleteLesson(Course course, Lesson lesson)
+    void OnSaveCourseName()
     {
-        var c = coursesData.courses.Find(x => x.id == course.id);
-        if (c == null) return;
-        c.lessons.RemoveAll(x => x.id == lesson.id);
+        if (editingCourse == null || courseNameInput == null) return;
+        var newName = courseNameInput.text.Trim();
+        if (string.IsNullOrEmpty(newName)) return;
+        editingCourse.name = newName;
         DataManager.SaveCourses(coursesData);
-        coursesController.RefreshList();
+        // Обновляем список курсов, если он есть в сцене
+        var cc = FindObjectOfType<CoursesController>();
+        if (cc != null) cc.RefreshList();
     }
 
-    public void EditLessonTitle(Course course, Lesson lesson, string newTitle)
+    void OnAddLesson()
     {
-        var c = coursesData.courses.Find(x => x.id == course.id);
-        var l = c?.lessons.Find(x => x.id == lesson.id);
-        if (l == null) return;
-        l.title = newTitle;
+        if (editingCourse == null || newLessonTitleInput == null) return;
+        var title = newLessonTitleInput.text.Trim();
+        if (string.IsNullOrEmpty(title)) return;
+        var newId = DataManager.NextLessonId(editingCourse);
+        var lesson = new Lesson { id = newId, title = title, stars = 0 };
+        editingCourse.lessons.Add(lesson);
         DataManager.SaveCourses(coursesData);
-        coursesController.RefreshList();
+        newLessonTitleInput.text = "";
+        RefreshLessonsEditor();
+        var cc = FindObjectOfType<CoursesController>();
+        if (cc != null) cc.RefreshList();
+    }
+
+    void DeleteLesson(Lesson lesson)
+    {
+        if (editingCourse == null || lesson == null) return;
+        editingCourse.lessons.RemoveAll(x => x.id == lesson.id);
+        DataManager.SaveCourses(coursesData);
+        RefreshLessonsEditor();
+        var cc = FindObjectOfType<CoursesController>();
+        if (cc != null) cc.RefreshList();
     }
 }

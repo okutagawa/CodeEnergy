@@ -37,18 +37,30 @@ public class UIManager : MonoBehaviour
     }
 
     public void ShowProfileSelection() { ShowOnly(profilePanel); }
-    public void ShowAdminPanel() { GameState.Instance.IsAdminMode = true; ShowOnly(adminPanel); }
-    public void ShowCoursesList() { GameState.Instance.IsAdminMode = false; ShowOnly(coursesPanel); }
+
+    public void ShowAdminPanel()
+    {
+        if (GameState.Instance != null) GameState.Instance.IsAdminMode = true;
+        ShowOnly(adminPanel);
+    }
+
+    public void ShowCoursesList()
+    {
+        if (GameState.Instance != null) GameState.Instance.IsAdminMode = false;
+        ShowOnly(coursesPanel);
+    }
+
     public void ShowLessonsForCourse(Course course)
     {
         ShowOnly(lessonsPanel);
         var controller = lessonsPanel.GetComponent<LessonsController>();
-        controller?.SetCourse(course);
+        controller?.OpenCourse(course);
     }
+
     public void ShowPlaceholder(string text)
     {
         ShowOnly(placeholderPanel);
         var ph = placeholderPanel.GetComponent<PlaceholderPanel>();
-        ph?.SetText(text);
+        ph?.Show(text);
     }
 }
