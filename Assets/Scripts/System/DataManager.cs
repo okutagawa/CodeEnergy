@@ -1,8 +1,8 @@
-// Assets/Scripts/Systems/DataManager.cs
 using System.IO;
 using System.Text;
 using UnityEngine;
 
+// Читает/записывает данные курсов в файл и выдает новые идентификаторы
 public static class DataManager
 {
     static DataManager()
@@ -14,6 +14,7 @@ public static class DataManager
     public static string CoursesFile => Path.Combine(DataPath, "courses.json");
     public static string ProfilesFile => Path.Combine(DataPath, "profiles.json");
 
+    // Загрузка контейнера курсов. Если файла нет — возвращает пустой контейнер
     public static CoursesContainer LoadCourses()
     {
         if (!File.Exists(CoursesFile))
@@ -26,6 +27,7 @@ public static class DataManager
         return JsonUtility.FromJson<CoursesContainer>(json) ?? new CoursesContainer();
     }
 
+    // Сохранение контейнера в файл (перезапись)
     public static void SaveCourses(CoursesContainer data)
     {
         var json = JsonUtility.ToJson(data, true);
@@ -50,6 +52,7 @@ public static class DataManager
         File.WriteAllText(ProfilesFile, json, Encoding.UTF8);
     }
 
+    // Вычисляет уникальный id для нового курса
     public static int NextCourseId(CoursesContainer cc)
     {
         int max = 0;
@@ -57,6 +60,7 @@ public static class DataManager
         return max + 1;
     }
 
+    // Вычисляет уникальный id для нового урока в данном курсе
     public static int NextLessonId(Course course)
     {
         int max = 0;

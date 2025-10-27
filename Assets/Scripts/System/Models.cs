@@ -1,6 +1,7 @@
-// Assets/Scripts/Systems/Models.cs
+
 using System;
 using System.Collections.Generic;
+// описание сущностей
 
 [Serializable]
 public class Lesson

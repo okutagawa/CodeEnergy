@@ -2,11 +2,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
+// Показывает выбранный курс и список его уроков для ученика, обрабатывает клик по уроку
 public class LessonsController : MonoBehaviour
 {
     public Text headerTitle;
     public Transform lessonsListContent; // LessonsScroll -> Viewport -> Content
-    public GameObject lessonItemPrefab; // LessonItemPrefab
+    public GameObject lessonItemPrefab;
 
     private Course currentCourse;
 

@@ -1,7 +1,7 @@
-// Assets/Scripts/UI/RoleSelectionController.cs
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
+// экран выбора роли (Student / Admin) и логика входа в админ‑режим (пароль)
 public class RoleSelectionController : MonoBehaviour
 {
     public Button btnStudent;

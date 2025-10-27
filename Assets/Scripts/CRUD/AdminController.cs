@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
 
+// Логика редактора курса — открыть курс, редактировать имя, добавлять и удалять уроки, сохранять изменения.
 public class AdminController : MonoBehaviour
 {
     public InputField courseNameInput;

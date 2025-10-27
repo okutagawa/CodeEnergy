@@ -1,17 +1,18 @@
 using UnityEngine;
 
+// координатор видимости панелей UI и шлюз для показа основных экранов (меню, курсы, уроки, админ и плейсхолдер)
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance { get; private set; }
 
     [Header("Panels")]
     public GameObject roleSelectionPanel;
-    public GameObject adminPasswordPanel; // password UI can be separate
+    public GameObject adminPasswordPanel; 
     public GameObject profilePanel;
     public GameObject coursesPanel;
     public GameObject lessonsPanel;
     public GameObject adminPanel;
-    public GameObject placeholderPanel; // simple text panel for quiz placeholder
+    public GameObject placeholderPanel;
 
     void Awake()
     {

@@ -1,13 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// Контроллер списка курсов — подгружает все курсы, создаёт CourseButtonPrefab для каждого, обрабатывает добавление курса и переходы.
 public class CoursesController : MonoBehaviour
 {
     public Transform coursesListContent; // Content внутри Scroll View
-    public GameObject courseButtonPrefab; // CourseButtonPrefab
-    public InputField newCourseName; // optional
-    public Button addCourseBtn; // optional
-    public Button backButton; // optional
+    public GameObject courseButtonPrefab;
+    public InputField newCourseName; 
+    public Button addCourseBtn; 
+    public Button backButton; 
 
     private CoursesContainer coursesData;
 

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// Простая панель для сообщений/заглушек с кнопкой закрытия
 public class PlaceholderPanel : MonoBehaviour
 {
     public Text messageText;

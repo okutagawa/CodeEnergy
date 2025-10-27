@@ -36,7 +36,7 @@ public class CourseButtonBinder : MonoBehaviour
             deleteButton.onClick.AddListener(() => parentController.OnDeleteCourseClicked(course));
         }
 
-        // Show/hide admin controls depending on mode
+        // Показать/скрыть элементы управления в зависимости от режима
         if (editButton != null) editButton.gameObject.SetActive(GameState.Instance != null && GameState.Instance.IsAdminMode);
         if (deleteButton != null) deleteButton.gameObject.SetActive(GameState.Instance != null && GameState.Instance.IsAdminMode);
     }

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
+// ”правление списком профилей пользовател€ (создание/удаление/выбор)
 public class ProfileController : MonoBehaviour
 {
     public InputField newProfileName;

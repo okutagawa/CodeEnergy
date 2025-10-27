@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Глобальное хранилище текущих флагов состояния игры (например, режим админа, текущий профиль и т.п.)
 public class GameState : MonoBehaviour
 {
     public static GameState Instance { get; private set; }
