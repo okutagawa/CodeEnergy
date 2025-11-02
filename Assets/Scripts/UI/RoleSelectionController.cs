@@ -1,42 +1,43 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // экран выбора роли (Student / Admin) и логика входа в админ‑режим (пароль)
 public class RoleSelectionController : MonoBehaviour
 {
-    public Button btnStudent;
+    public Button btnPlayer;
     public Button btnAdmin;
-    public GameObject adminPasswordPanel;
-    public InputField passwordInput;
-    public Button adminConfirm;
-    public Button adminCancel;
-    private const string AdminPassword = "admin123";
+    public Button btnExit; // optional
+    public GameObject adminPasswordPanel; // ссылка на панель ввода пароля
 
     void Start()
     {
-        btnStudent.onClick.AddListener(() => UIManager.Instance.ShowProfileSelection());
-        btnAdmin.onClick.AddListener(ShowPassword);
-        adminConfirm.onClick.AddListener(OnAdminConfirm);
-        adminCancel.onClick.AddListener(() => adminPasswordPanel.SetActive(false));
-        adminPasswordPanel.SetActive(false);
+        if (btnPlayer != null) btnPlayer.onClick.RemoveAllListeners();
+        if (btnAdmin != null) btnAdmin.onClick.RemoveAllListeners();
+        if (btnExit != null) btnExit.onClick.RemoveAllListeners();
+
+        if (btnPlayer != null) btnPlayer.onClick.AddListener(OnPlayerClicked);
+        if (btnAdmin != null) btnAdmin.onClick.AddListener(OnAdminClicked);
+        if (btnExit != null) btnExit.onClick.AddListener(OnExitClicked);
     }
 
-    void ShowPassword()
+    void OnPlayerClicked()
     {
-        adminPasswordPanel.SetActive(true);
-        passwordInput.text = "";
+        // Загружает сцену игры по имени; убедись, что GameScene добавлена в Build Settings
+        SceneManager.LoadScene("GameScene");
     }
 
-    void OnAdminConfirm()
+    void OnAdminClicked()
     {
-        if (passwordInput.text == AdminPassword)
-        {
-            adminPasswordPanel.SetActive(false);
-            UIManager.Instance.ShowAdminPanel();
-        }
-        else
-        {
-            Debug.Log("Wrong admin password");
-        }
+        // показываем панель ввода пароля через UIManager если он есть
+        if (UIManager.Instance != null && adminPasswordPanel != null)
+            UIManager.Instance.ShowOnly(adminPasswordPanel);
+        else if (adminPasswordPanel != null)
+            adminPasswordPanel.SetActive(true);
+    }
+
+    void OnExitClicked()
+    {
+        Application.Quit();
     }
 }
