@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 9069553580855934663}
   - component: {fileID: 932147850994924891}
   - component: {fileID: 3551437188560748966}
+  - component: {fileID: 6715278436223189548}
   m_Layer: 5
   m_Name: TaskItem
   m_TagString: Untagged
@@ -77,6 +78,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6715278436223189548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 161442151469992612}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3382f1e2c55c5a409038b7019dc3ee7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textTitle: {fileID: 9041947203013103757}
+  buttonRoot: {fileID: 5698885583647794431}
 --- !u!1 &5155706350580165831
 GameObject:
   m_ObjectHideFlags: 0
@@ -169,7 +184,7 @@ GameObject:
   - component: {fileID: 3070370931427567148}
   - component: {fileID: 5698885583647794431}
   m_Layer: 5
-  m_Name: Button (Legacy)
+  m_Name: ButtonRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -289,7 +304,7 @@ GameObject:
   - component: {fileID: 6500218071328769022}
   - component: {fileID: 9041947203013103757}
   m_Layer: 5
-  m_Name: Text (Legacy)
+  m_Name: TitleText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

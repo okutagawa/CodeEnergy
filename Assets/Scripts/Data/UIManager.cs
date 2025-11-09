@@ -1,0 +1,175 @@
+using System;
+using UnityEngine;
+
+public class UIManager : MonoBehaviour
+{
+    public static UIManager Instance { get; private set; }
+
+    [Header("Main panels (assign in inspector)")]
+    public GameObject roleSelectionPanel;
+    public GameObject adminPasswordPanel;
+    public GameObject coursesPanel;
+    public GameObject tasksPanel;
+
+    [Header("Optional / child panels")]
+    public GameObject taskEditorPanel; // если будет
+    public GameObject editCoursePanel; // если будет
+
+    // internal caches for quick access to controllers
+    private CourseListManager _courseListManager;
+    private TasksListManager _tasksListManager;
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
+    void Start()
+    {
+        Debug.Log("persistentDataPath = " + Application.persistentDataPath);
+        // try to cache managers if present in scene
+        CacheManagers();
+    }
+
+    // Попытаться получить ссылки на менеджеры (если объекты уже в сцене)
+    public void CacheManagers()
+    {
+        if (coursesPanel != null)
+        {
+            _courseListManager = coursesPanel.GetComponentInChildren<CourseListManager>(true);
+            // Если CourseListManager не найден напрямую в children, попробуйте FindObjectOfType
+            if (_courseListManager == null) _courseListManager = FindObjectOfType<CourseListManager>();
+        }
+
+        if (tasksPanel != null)
+        {
+            _tasksListManager = tasksPanel.GetComponentInChildren<TasksListManager>(true);
+            if (_tasksListManager == null) _tasksListManager = FindObjectOfType<TasksListManager>();
+        }
+    }
+
+    // Показываем только одну панель, скрывая остальные (без уничтожения)
+    public void ShowOnly(GameObject panel)
+    {
+        // Список всех известных панелей — расширяйте по необходимости
+        var all = new GameObject[] {
+            roleSelectionPanel, adminPasswordPanel,
+            coursesPanel, tasksPanel, taskEditorPanel, editCoursePanel
+        };
+
+        foreach (var p in all)
+        {
+            if (p == null) continue;
+            p.SetActive(p == panel);
+        }
+
+        // После переключения иногда нужно обновить кеш менеджеров, если панели создаются динамически
+        CacheManagers();
+    }
+
+    // Простые обёртки для удобства вызова из других контроллеров
+    public void ShowRoleSelection()
+    {
+        ShowOnly(roleSelectionPanel ?? roleSelectionPanel);
+    }
+
+    public void ShowAdminPassword()
+    {
+        ShowOnly(adminPasswordPanel ?? adminPasswordPanel);
+    }
+
+    public void ShowCoursesPanel()
+    {
+        ShowOnly(coursesPanel);
+        // Обновить список курсов при показе
+        if (_courseListManager == null) CacheManagers();
+        if (_courseListManager != null)
+        {
+            // гарантируем, что CourseListManager обновит UI из сохранённых данных
+            try { _courseListManager.RefreshUI(); } catch { /* если метод private, то можно вызвать через Start/Enable */ }
+        }
+    }
+
+    // Основной метод для перехода к TasksPanel и передачи контекста courseId
+    public void OpenTasksWindowForCourse(int courseId)
+    {
+        if (tasksPanel == null)
+        {
+            Debug.LogError("UIManager: tasksPanel is not assigned in inspector");
+            return;
+        }
+
+        ShowOnly(tasksPanel);
+
+        // Попытка получить TasksListManager и передать ему context
+        if (_tasksListManager == null) CacheManagers();
+
+        if (_tasksListManager != null)
+        {
+            _tasksListManager.OpenForCourse(courseId);
+        }
+        else
+        {
+            // fallback: ищем в сцене
+            var found = FindObjectOfType<TasksListManager>();
+            if (found != null)
+            {
+                _tasksListManager = found;
+                _tasksListManager.OpenForCourse(courseId);
+            }
+            else
+            {
+                Debug.LogError("UIManager: TasksListManager not found in scene");
+            }
+        }
+    }
+
+    // Удобный метод: вызов при успешной авторизации администратора
+    public void OnAdminAuthenticated()
+    {
+        // Показываем панель курсов по умолчанию
+        ShowCoursesPanel();
+    }
+
+    // Возврат к выбору ролей (для крестика/Exit)
+    public void ReturnToRoleSelection()
+    {
+        ShowOnly(roleSelectionPanel);
+    }
+
+    // Простая утилита для безопасного обращения к CourseListManager (если метод RefreshUI доступен)
+    public CourseListManager GetCourseListManager()
+    {
+        if (_courseListManager == null) CacheManagers();
+        return _courseListManager;
+    }
+
+    public TasksListManager GetTasksListManager()
+    {
+        if (_tasksListManager == null) CacheManagers();
+        return _tasksListManager;
+    }
+
+    public TaskEditorController GetTaskEditorController()
+    {
+        // Попробуем получить контроллер из кэшированных ссылок
+        if (taskEditorPanel != null)
+        {
+            var ctrl = taskEditorPanel.GetComponentInChildren<TaskEditorController>(true);
+            if (ctrl != null) return ctrl;
+        }
+
+        // Попробуем найти в сцене (активные объекты)
+        var found = FindObjectOfType<TaskEditorController>();
+        if (found != null) return found;
+
+        // И последний вариант — поиск среди всех GameObject (включая неактивные)
+        var all = Resources.FindObjectsOfTypeAll<TaskEditorController>();
+        if (all != null && all.Length > 0) return all[0];
+
+        return null;
+    }
+
+}

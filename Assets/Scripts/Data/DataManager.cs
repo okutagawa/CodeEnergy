@@ -52,13 +52,8 @@ namespace MyGame.Data
         {
             if (!File.Exists(TasksFilePath))
             {
-                // fallback default list
-                return new List<TaskModel>
-                {
-                    new TaskModel { id = 1, title = "Task A" },
-                    new TaskModel { id = 2, title = "Task B" },
-                    new TaskModel { id = 3, title = "Task C" }
-                };
+                // возвращаем пустой список (не дефолтные тестовые задачи)
+                return new List<TaskModel>();
             }
 
             try
@@ -69,13 +64,8 @@ namespace MyGame.Data
             }
             catch
             {
-                Debug.LogWarning("DataManager: ошибка чтения tasks.json, возвращаю дефолтный список");
-                return new List<TaskModel>
-                {
-                    new TaskModel { id = 1, title = "Task A" },
-                    new TaskModel { id = 2, title = "Task B" },
-                    new TaskModel { id = 3, title = "Task C" }
-                };
+                Debug.LogWarning("DataManager: ошибка чтения tasks.json, возвращаю пустой список");
+                return new List<TaskModel>();
             }
         }
 
@@ -99,6 +89,13 @@ namespace MyGame.Data
         private class TaskListWrapper
         {
             public List<TaskModel> tasks = new List<TaskModel>();
+        }
+        public static int GetNextTaskId(List<TaskModel> tasks)
+        {
+            if (tasks == null || tasks.Count == 0) return 1;
+            // на всякий случай игнорируем отрицательные и нулевые id
+            var max = tasks.Where(t => t != null && t.id > 0).Select(t => t.id).DefaultIfEmpty(0).Max();
+            return max + 1;
         }
     }
 }

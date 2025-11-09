@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Linq;
 using MyGame.Models;
 using MyGame.Data;
 
@@ -10,8 +11,9 @@ public class CourseListManager : MonoBehaviour
     public GameObject prefabCourseItem;
     public InputField inputCourseName;
     public Button buttonAddCourse;
-    public Button buttonDeleteSelected; // привязать внешнюю кнопку удаления
-    public Button buttonEditSelected;   // опционально: кнопка редактирования
+    public Button buttonDeleteSelected;
+    public Button buttonEditSelected;
+    public Button buttonExit;
 
     private CoursesContainer container;
     private Dictionary<int, GameObject> instantiated = new Dictionary<int, GameObject>();
@@ -19,8 +21,10 @@ public class CourseListManager : MonoBehaviour
 
     void Start()
     {
-        buttonAddCourse.onClick.AddListener(OnAddCourseClicked);
+        if (buttonAddCourse != null) { buttonAddCourse.onClick.RemoveAllListeners(); buttonAddCourse.onClick.AddListener(OnAddCourseClicked); }
         if (buttonDeleteSelected != null) buttonDeleteSelected.onClick.AddListener(DeleteSelectedCourse);
+        if (buttonExit != null) { buttonExit.onClick.RemoveAllListeners(); buttonExit.onClick.AddListener(OnExitClicked); }
+
         container = DataManager.LoadCourses();
         RefreshUI();
     }
@@ -28,7 +32,9 @@ public class CourseListManager : MonoBehaviour
     void OnAddCourseClicked()
     {
         var title = inputCourseName.text.Trim();
+        Debug.Log("CourseListManager: Adding course with title: '" + title + "'");
         if (string.IsNullOrEmpty(title)) return;
+
         var model = new CourseModel { id = DataManager.NextCourseId(container), name = title };
         container.courses.Add(model);
         AddCourseToUI(model);
@@ -40,30 +46,28 @@ public class CourseListManager : MonoBehaviour
     {
         var go = Instantiate(prefabCourseItem, contentCourses);
         var item = go.GetComponent<CourseItem>();
+        if (item == null) Debug.LogError("CourseListManager: prefabCourseItem missing CourseItem component");
         item.Initialize(c);
         item.onSingleClick = OnCourseSingleClick;
-        // item.onDoubleClick = OnCourseDoubleClick;
+        item.onDoubleClick = OnCourseDoubleClick;
         instantiated[c.id] = go;
-        // Если добавляем элемент — обновим визуал выделения
         item.SetSelected(c.id == selectedCourseId);
+
+        // force layout rebuild so ScrollRect updates immediately
+        UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(contentCourses);
     }
 
-    void OnCourseSingleClick(CourseModel c)
+    void OnCourseSingleClick(CourseModel c) => SelectCourse(c.id);
+
+    void OnCourseDoubleClick(CourseModel c)
     {
-        SelectCourse(c.id);
+        Debug.Log("CourseListManager: double click course id=" + c.id + " name='" + c.name + "'");
+        UIManager.Instance?.OpenTasksWindowForCourse(c.id);
     }
 
-    //void OnCourseDoubleClick(CourseModel c)
-    //{
-    //    // Переход в окно задач
-    //    UIManager.Instance?.OpenTasksWindowForCourse(c.id);
-    //}
-
-    // Выполняем выбор: обновляем selectedCourseId и подсветку элементов
     public void SelectCourse(int courseId)
     {
-        if (selectedCourseId == courseId) return; // уже выбран
-        // снять выделение у предыдущего
+        if (selectedCourseId == courseId) return;
         if (instantiated.TryGetValue(selectedCourseId, out var prevGo))
         {
             var prevItem = prevGo.GetComponent<CourseItem>();
@@ -80,29 +84,39 @@ public class CourseListManager : MonoBehaviour
     public void DeleteSelectedCourse()
     {
         if (selectedCourseId < 0) return;
-        // находим модель
         var model = container.courses.Find(x => x.id == selectedCourseId);
         if (model == null) return;
 
-        // удаляем UI
         if (instantiated.TryGetValue(selectedCourseId, out var go))
         {
             Destroy(go);
             instantiated.Remove(selectedCourseId);
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(contentCourses);
         }
 
-        // удаляем из контейнера и сохраняем
         container.courses.RemoveAll(x => x.id == selectedCourseId);
         DataManager.SaveCourses(container);
-
-        // сброс выбора
         selectedCourseId = -1;
     }
 
-    void RefreshUI()
+    // made public so UIManager can call RefreshUI safely
+    public void RefreshUI()
     {
         foreach (var kv in instantiated.Values) Destroy(kv);
         instantiated.Clear();
+        container = container ?? DataManager.LoadCourses();
         foreach (var c in container.courses) AddCourseToUI(c);
+    }
+
+    private void OnExitClicked()
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ReturnToRoleSelection();
+        }
+        else
+        {
+            Debug.LogWarning("CourseListManager: UIManager.Instance is null when trying to return to role selection");
+        }
     }
 }
