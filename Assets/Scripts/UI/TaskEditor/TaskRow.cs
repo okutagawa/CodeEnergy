@@ -36,7 +36,7 @@ public class TaskRow : MonoBehaviour
             textId.text = index.ToString();
     }
 
-    // mark existing id (visual id text will show task id if >0)
+    // отметить существующий идентификатор (в визуальном идентификаторе будет отображаться идентификатор задачи, если он >0)
     public void SetExistingTaskId(int id)
     {
         existingTaskId = id;
@@ -44,7 +44,7 @@ public class TaskRow : MonoBehaviour
             textId.text = id > 0 ? id.ToString() : (rowIndex > 0 ? rowIndex.ToString() : "");
     }
 
-    // fill UI fields from an existing TaskModel
+    // заполнение полей пользовательского интерфейса из существующей TaskModel
     public void FillFromModel(MyGame.Models.TaskModel model)
     {
         if (model == null) return;
@@ -60,7 +60,7 @@ public class TaskRow : MonoBehaviour
         if (toggleHasStars != null) toggleHasStars.isOn = model.hasStars;
     }
 
-    // Setup expander: add EventTrigger entries to small InputFields
+    // Настройка экспандера: добавление записей EventTrigger в небольшие поля ввода
     public void SetupExpander(InputFieldExpander exp)
     {
         expander = exp;
@@ -89,7 +89,7 @@ public class TaskRow : MonoBehaviour
         AddTrigger(inputCorrect);
     }
 
-    // keep full label texts in sync with dropdown selection
+    // синхронизация полных текстов с метками с выпадающим списком
     public void SetupDropdownLabels()
     {
         if (dropdownGiver != null)
@@ -119,7 +119,7 @@ public class TaskRow : MonoBehaviour
         }
     }
 
-    // Validation
+    // Валидация
     public bool IsValid(out string validationMessage)
     {
         validationMessage = null;
@@ -188,7 +188,7 @@ public class TaskRow : MonoBehaviour
         }
     }
 
-    // Convert UI into intermediate data
+    // Преобразование пользовательского интерфейса в промежуточные данные
     public RowData ToRowData()
     {
         return new RowData

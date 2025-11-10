@@ -9,25 +9,25 @@ namespace MyGame.Models
         public int id;
         public string title;
 
-        // NPC who gives the task (name or identifier)
+        // NPC, который даёт задание (имя или идентификатор)
         public string giverNpc;
 
-        // NPC who receives/completes the task
+        // NPC, который получает/выполняет задание
         public string receiverNpc;
 
-        // Dialogue / text shown to the giver NPC
+        // Диалог / текст, отображаемый для дающего NPC
         public string textForGiver;
 
-        // Dialogue / text shown to the receiver NPC
+        // Диалог / текст, отображаемый для получателя NPC
         public string textForReceiver;
 
-        // Answer options (non-empty strings). Order matters.
+        // Варианты ответов (непустые строки). Порядок имеет значение.
         public List<string> answers = new List<string>();
 
         // Indexes of correct answers (0-based)
         public List<int> correctAnswerIndexes = new List<int>();
 
-        // Flag whether this task awards stars
+        // за выполнение этого задания начисляются звёзды
         public bool hasStars = false;
     }
 }

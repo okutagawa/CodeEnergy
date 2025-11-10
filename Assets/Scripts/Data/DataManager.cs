@@ -84,7 +84,7 @@ namespace MyGame.Data
             }
         }
 
-        // Helper wrapper because Unity JsonUtility doesn't handle top-level lists.
+        // ¬спомогательна€ оболочка, поскольку Unity JsonUtility не поддерживает списки верхнего уровн€.
         [System.Serializable]
         private class TaskListWrapper
         {

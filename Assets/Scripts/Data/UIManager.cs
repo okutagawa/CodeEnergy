@@ -12,10 +12,10 @@ public class UIManager : MonoBehaviour
     public GameObject tasksPanel;
 
     [Header("Optional / child panels")]
-    public GameObject taskEditorPanel; // если будет
-    public GameObject editCoursePanel; // если будет
+    public GameObject taskEditorPanel; 
+    public GameObject editCoursePanel;
 
-    // internal caches for quick access to controllers
+    // внутренние кэши для быстрого доступа к контроллерам
     private CourseListManager _courseListManager;
     private TasksListManager _tasksListManager;
 
@@ -29,7 +29,6 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         Debug.Log("persistentDataPath = " + Application.persistentDataPath);
-        // try to cache managers if present in scene
         CacheManagers();
     }
 

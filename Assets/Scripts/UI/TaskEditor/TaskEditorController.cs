@@ -11,23 +11,23 @@ public class TaskEditorController : MonoBehaviour
     [Header("UI refs")]
     public Text titleText;
     public RectTransform contentRows;      // TasksEditorScroll/Viewport/Content
-    public GameObject prefabTaskRow;       // TaskRow prefab (Asset)
+    public GameObject prefabTaskRow;       // TaskRow 
     public Button createTaskBtn;
     public Button saveAndExitBtn;
-    public ScrollRect scrollRect;          // optional, for auto-scrolling
+    public ScrollRect scrollRect;         
 
     [Header("NPC list source")]
-    public List<string> npcNames = new List<string>(); // fill in inspector or dynamically
+    public List<string> npcNames = new List<string>(); // заполнять в инспекторе или динамически
 
     [Header("Integration")]
-    public InputFieldExpander inputFieldExpander; // assign in inspector
+    public InputFieldExpander inputFieldExpander; // назначить в инспекторе
 
     private int contextCourseId = -1;
     private List<TaskModel> allTasks;
     private CoursesContainer coursesContainer;
     private List<TaskRow> activeRows = new List<TaskRow>();
 
-    // editing single task mode
+    // редактирование режима выполнения одной задачи
     private bool isEditing = false;
     private int editingTaskId = -1;
 
@@ -37,7 +37,7 @@ public class TaskEditorController : MonoBehaviour
         if (saveAndExitBtn != null) { saveAndExitBtn.onClick.RemoveAllListeners(); saveAndExitBtn.onClick.AddListener(OnSaveAndExit); }
     }
 
-    // Open editor for a course: load existing tasks and show rows
+    // загрузка существующих заданий и отображения строк
     public void OpenForCourseEditor(int courseId)
     {
         isEditing = false;
@@ -110,7 +110,7 @@ public class TaskEditorController : MonoBehaviour
         if (scrollRect != null) StartCoroutine(ScrollToBottomNextFrame());
     }
 
-    // Open for editing a single existing TaskModel (called from TasksListManager.Edit)
+    // Открыт для редактирования одной существующей модели TaskModel (вызывается из TasksListManager.Edit)
     public void OpenForEdit(TaskModel model)
     {
         if (model == null) { Debug.LogError("TaskEditorController.OpenForEdit: model is null"); return; }
@@ -205,7 +205,7 @@ public class TaskEditorController : MonoBehaviour
         activeRows.Clear();
     }
 
-    // Save: update existing tasks or create new ones; add new ids to course.taskIds
+    // Сохранение: обновляет существующие задачи или создает новые; добавляет новые идентификаторы в course.taskIds
     public void OnSaveAndExit()
     {
         coursesContainer = coursesContainer ?? DataManager.LoadCourses();
@@ -218,7 +218,7 @@ public class TaskEditorController : MonoBehaviour
             return;
         }
 
-        // update existing or create new
+        // обновление существующих или создание новых
         foreach (var row in activeRows)
         {
             if (!row.IsValid(out var msg))
