@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using MyGame.Models;
 
 public class TaskRow : MonoBehaviour
 {
@@ -24,10 +26,17 @@ public class TaskRow : MonoBehaviour
     [Header("Settings")]
     public bool correctIndexesAreOneBased = true;
 
-    // runtime
+    // Runtime
     private int rowIndex = -1;
     private InputFieldExpander expander;
-    public int existingTaskId = -1; // -1 = новая строка, >=0 = соответствует TaskModel.id
+
+    // Если строка соответствует существующей задаче, хранит её id, иначе -1
+    public int existingTaskId = -1;
+
+    // ВАЖНО: параллельные списки GUID для пунктов дропдауна
+    // Индекс dropdown.value соответствует элементу из этих списков
+    [HideInInspector] public List<string> giverOptionGuids = new List<string>();
+    [HideInInspector] public List<string> receiverOptionGuids = new List<string>();
 
     public void Initialize(int index)
     {
@@ -36,7 +45,6 @@ public class TaskRow : MonoBehaviour
             textId.text = index.ToString();
     }
 
-    // отметить существующий идентификатор (в визуальном идентификаторе будет отображаться идентификатор задачи, если он >0)
     public void SetExistingTaskId(int id)
     {
         existingTaskId = id;
@@ -44,23 +52,58 @@ public class TaskRow : MonoBehaviour
             textId.text = id > 0 ? id.ToString() : (rowIndex > 0 ? rowIndex.ToString() : "");
     }
 
-    // заполнение полей пользовательского интерфейса из существующей TaskModel
-    public void FillFromModel(MyGame.Models.TaskModel model)
+    // Заполняем поля из модели (без установки dropdown.value — это сделает контроллер, когда заполнит списки GUID)
+    public void FillFromModel(TaskModel model)
     {
         if (model == null) return;
         existingTaskId = model.id;
         if (textId != null) textId.text = model.id.ToString();
-        if (inputTitle != null) inputTitle.text = model.title;
-        if (inputTextGiver != null) inputTextGiver.text = model.textForGiver;
-        if (inputTextReceiver != null) inputTextReceiver.text = model.textForReceiver;
+
+        if (inputTitle != null) inputTitle.text = model.title ?? "";
+
+        if (inputTextGiver != null) inputTextGiver.text = model.textForGiver ?? "";
+        if (inputTextReceiver != null) inputTextReceiver.text = model.textForReceiver ?? "";
+
         if (inputAnswers != null) inputAnswers.text = model.answers != null ? string.Join(";", model.answers) : "";
         if (inputCorrect != null) inputCorrect.text = model.correctAnswerIndexes != null
             ? string.Join(",", model.correctAnswerIndexes.Select(i => correctIndexesAreOneBased ? (i + 1).ToString() : i.ToString()))
             : "";
+
         if (toggleHasStars != null) toggleHasStars.isOn = model.hasStars;
     }
 
-    // Настройка экспандера: добавление записей EventTrigger в небольшие поля ввода
+    // Вызывается контроллером после PopulateNpcDropdown, чтобы выставить нужные выбранные значения по GUID из модели
+    public void ApplyModelSelection(TaskModel model)
+    {
+        if (model == null) return;
+
+        if (dropdownGiver != null && giverOptionGuids != null && giverOptionGuids.Count > 0)
+        {
+            var idx = IndexOfGuid(giverOptionGuids, model.giverNpcGuid);
+            dropdownGiver.value = idx >= 0 ? idx : 0;
+        }
+
+        if (dropdownReceiver != null && receiverOptionGuids != null && receiverOptionGuids.Count > 0)
+        {
+            var idx = IndexOfGuid(receiverOptionGuids, model.receiverNpcGuid);
+            dropdownReceiver.value = idx >= 0 ? idx : 0;
+        }
+
+        // Обновим full labels после установки value
+        SetupDropdownLabels();
+    }
+
+    private int IndexOfGuid(List<string> list, string guid)
+    {
+        if (string.IsNullOrEmpty(guid) || list == null) return -1;
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i] == guid) return i;
+        }
+        return -1;
+    }
+
+    // Expander для больших вводов
     public void SetupExpander(InputFieldExpander exp)
     {
         expander = exp;
@@ -89,7 +132,7 @@ public class TaskRow : MonoBehaviour
         AddTrigger(inputCorrect);
     }
 
-    // синхронизация полных текстов с метками с выпадающим списком
+    // Синхронизация полных лейблов с текущим выбором дропдауна
     public void SetupDropdownLabels()
     {
         if (dropdownGiver != null)
@@ -123,9 +166,26 @@ public class TaskRow : MonoBehaviour
     public bool IsValid(out string validationMessage)
     {
         validationMessage = null;
+
         if (inputTitle == null || string.IsNullOrWhiteSpace(inputTitle.text))
         {
             validationMessage = "Title is required";
+            return false;
+        }
+
+        // Проверим, что выбранные GUID существуют
+        var giverGuid = GetSelectedGiverGuid();
+        var receiverGuid = GetSelectedReceiverGuid();
+
+        if (string.IsNullOrEmpty(giverGuid))
+        {
+            validationMessage = "Giver NPC is required";
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(receiverGuid))
+        {
+            validationMessage = "Receiver NPC is required";
             return false;
         }
 
@@ -188,14 +248,14 @@ public class TaskRow : MonoBehaviour
         }
     }
 
-    // Преобразование пользовательского интерфейса в промежуточные данные
+    // Преобразование UI ? данные для сохранения (GUID вместо индексов)
     public RowData ToRowData()
     {
         return new RowData
         {
             title = inputTitle?.text ?? "",
-            giverIndex = dropdownGiver != null ? dropdownGiver.value : -1,
-            receiverIndex = dropdownReceiver != null ? dropdownReceiver.value : -1,
+            giverNpcGuid = GetSelectedGiverGuid(),
+            receiverNpcGuid = GetSelectedReceiverGuid(),
             textForGiver = inputTextGiver?.text ?? "",
             textForReceiver = inputTextReceiver?.text ?? "",
             answers = GetAnswers(),
@@ -204,11 +264,27 @@ public class TaskRow : MonoBehaviour
         };
     }
 
+    private string GetSelectedGiverGuid()
+    {
+        if (dropdownGiver == null || giverOptionGuids == null || giverOptionGuids.Count == 0) return "";
+        var i = dropdownGiver.value;
+        if (i < 0 || i >= giverOptionGuids.Count) return "";
+        return giverOptionGuids[i];
+    }
+
+    private string GetSelectedReceiverGuid()
+    {
+        if (dropdownReceiver == null || receiverOptionGuids == null || receiverOptionGuids.Count == 0) return "";
+        var i = dropdownReceiver.value;
+        if (i < 0 || i >= receiverOptionGuids.Count) return "";
+        return receiverOptionGuids[i];
+    }
+
     public class RowData
     {
         public string title;
-        public int giverIndex;
-        public int receiverIndex;
+        public string giverNpcGuid;
+        public string receiverNpcGuid;
         public string textForGiver;
         public string textForReceiver;
         public string[] answers;

@@ -50,21 +50,30 @@ namespace MyGame.Data
         // Tasks
         public static List<TaskModel> LoadTasks()
         {
-            if (!File.Exists(TasksFilePath))
-            {
-                // возвращаем пустой список (не дефолтные тестовые задачи)
-                return new List<TaskModel>();
-            }
-
+            Debug.Log($"DataManager.LoadTasks called. path={TasksFilePath}");
             try
             {
+                if (!File.Exists(TasksFilePath))
+                {
+                    Debug.Log("DataManager.LoadTasks: file not found, returning empty list");
+                    return new List<TaskModel>();
+                }
+
                 var json = File.ReadAllText(TasksFilePath);
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    Debug.LogWarning("DataManager.LoadTasks: file is empty, returning empty list");
+                    return new List<TaskModel>();
+                }
+
                 var wrapper = JsonUtility.FromJson<TaskListWrapper>(json);
+                var count = wrapper?.tasks?.Count ?? 0;
+                Debug.Log($"DataManager.LoadTasks: loaded {count} task(s)");
                 return wrapper?.tasks ?? new List<TaskModel>();
             }
-            catch
+            catch (System.Exception ex)
             {
-                Debug.LogWarning("DataManager: ошибка чтения tasks.json, возвращаю пустой список");
+                Debug.LogError("DataManager.LoadTasks: exception reading tasks.json -> " + ex);
                 return new List<TaskModel>();
             }
         }
@@ -73,14 +82,24 @@ namespace MyGame.Data
         {
             try
             {
-                var wrapper = new TaskListWrapper { tasks = tasks ?? new List<TaskModel>() };
+                // защита: убедимся, что директория существует
+                var dir = Path.GetDirectoryName(TasksFilePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                var safeTasks = tasks ?? new List<TaskModel>();
+                Debug.Log($"DataManager.SaveTasks called. tasks.Count={safeTasks.Count}, path={TasksFilePath}");
+
+                var wrapper = new TaskListWrapper { tasks = safeTasks };
                 var json = JsonUtility.ToJson(wrapper, true);
+
                 File.WriteAllText(TasksFilePath, json);
-                Debug.Log("DataManager: tasks saved to " + TasksFilePath);
+
+                Debug.Log($"DataManager.SaveTasks finished. Written bytes={json.Length}. Time={System.DateTime.Now:O}");
             }
             catch (System.Exception ex)
             {
-                Debug.LogError("DataManager: ошибка сохранения tasks " + ex);
+                Debug.LogError("DataManager.SaveTasks: exception saving tasks.json -> " + ex);
             }
         }
 
@@ -93,7 +112,6 @@ namespace MyGame.Data
         public static int GetNextTaskId(List<TaskModel> tasks)
         {
             if (tasks == null || tasks.Count == 0) return 1;
-            // на всякий случай игнорируем отрицательные и нулевые id
             var max = tasks.Where(t => t != null && t.id > 0).Select(t => t.id).DefaultIfEmpty(0).Max();
             return max + 1;
         }

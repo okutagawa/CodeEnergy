@@ -4035,9 +4035,6 @@ MonoBehaviour:
   createTaskBtn: {fileID: 1940276732}
   saveAndExitBtn: {fileID: 1918410374}
   scrollRect: {fileID: 0}
-  npcNames:
-  - "\u0411\u043E\u0440\u0438\u0441"
-  - "\u0412\u0438\u0442\u044F"
   inputFieldExpander: {fileID: 2036411054}
 --- !u!1 &962241864
 GameObject:

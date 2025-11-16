@@ -10,10 +10,10 @@ namespace MyGame.Models
         public string title;
 
         // NPC, который даёт задание (имя или идентификатор)
-        public string giverNpc;
+        public string giverNpcGuid;
 
         // NPC, который получает/выполняет задание
-        public string receiverNpc;
+        public string receiverNpcGuid;
 
         // Диалог / текст, отображаемый для дающего NPC
         public string textForGiver;

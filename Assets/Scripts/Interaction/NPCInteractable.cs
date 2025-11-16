@@ -1,33 +1,43 @@
 using UnityEngine;
+using MyGame.Models;
 
+[RequireComponent(typeof(NPCIdentity))]
 public class NPCInteractable : MonoBehaviour
 {
-    public Vector3 cameraOffsetLocal = new Vector3(-1.5f, 0.6f, 0f);
-    public float lookAtHeight = 0.6f;
-    public string npcTitle = "NPC Drone";
-    public string npcBody = "Привет. Это тестовый диалог.";
+    // <-- добавленные поля для хранения назначенных задач
+    [HideInInspector] public TaskModel assignedGiverTask;
+    [HideInInspector] public TaskModel assignedReceiverTask;
 
-    private bool isInteracting = false;
+    // опционально: для логирования / отображения имени
+    public string DisplayName => GetComponent<NPCIdentity>()?.DisplayName ?? gameObject.name;
+    public string Guid => GetComponent<NPCIdentity>()?.Guid ?? "";
 
-    public void Interact()
+    // В Start/OnEnable ничего не требуется — назначение делается извне (TaskAssignmentManager)
+    public virtual void Interact()
     {
-        if (isInteracting) return;
-        isInteracting = true;
-        CameraAndDialogManager.Instance.FocusOnNPC(transform, cameraOffsetLocal, lookAtHeight, OnCameraFocused);
+        Debug.Log($"Interact called on {DisplayName} (guid={Guid}). assignedGiverTask={(assignedGiverTask != null ? assignedGiverTask.id.ToString() : "null")}, assignedReceiverTask={(assignedReceiverTask != null ? assignedReceiverTask.id.ToString() : "null")}");
+
+        // Показать текст дающего только если он назначен и текст не пуст
+        if (assignedGiverTask != null && !string.IsNullOrEmpty(assignedGiverTask.textForGiver))
+        {
+            DialogueUI.Instance?.ShowForTask(assignedGiverTask, true, DisplayName);
+            return;
+        }
+
+        // Показать текст получателя если есть и текст не пуст
+        if (assignedReceiverTask != null && !string.IsNullOrEmpty(assignedReceiverTask.textForReceiver))
+        {
+            DialogueUI.Instance?.ShowForTask(assignedReceiverTask, false, DisplayName);
+            return;
+        }
+
+        // Если один из тасков есть, но текст пуст — логнуть и показать fallback
+        if (assignedGiverTask != null || assignedReceiverTask != null)
+        {
+            Debug.LogWarning($"Interact: task exists for {DisplayName} but text is empty. giverText='{assignedGiverTask?.textForGiver}', receiverText='{assignedReceiverTask?.textForReceiver}'");
+        }
+
+        DialogueUI.Instance?.Show(DisplayName, "(empty dialog)");
     }
 
-    private void OnCameraFocused()
-    {
-        DialogManager.Instance.OpenDialog(npcTitle, npcBody, OnDialogClosed);
-    }
-
-    private void OnDialogClosed()
-    {
-        CameraAndDialogManager.Instance.ReturnToOriginal(OnReturned);
-    }
-
-    private void OnReturned()
-    {
-        isInteracting = false;
-    }
 }

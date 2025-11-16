@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using MyGame.Data;
 using MyGame.Models;
+using MyGame.Data;
 
 public class TaskEditorController : MonoBehaviour
 {
@@ -14,10 +14,7 @@ public class TaskEditorController : MonoBehaviour
     public GameObject prefabTaskRow;       // TaskRow 
     public Button createTaskBtn;
     public Button saveAndExitBtn;
-    public ScrollRect scrollRect;         
-
-    [Header("NPC list source")]
-    public List<string> npcNames = new List<string>(); // заполнять в инспекторе или динамически
+    public ScrollRect scrollRect;          // optional
 
     [Header("Integration")]
     public InputFieldExpander inputFieldExpander; // назначить в инспекторе
@@ -42,12 +39,11 @@ public class TaskEditorController : MonoBehaviour
     {
         isEditing = false;
         editingTaskId = -1;
-
         contextCourseId = courseId;
         coursesContainer = DataManager.LoadCourses();
         allTasks = DataManager.LoadTasks();
 
-        var course = coursesContainer.courses.Find(c => c.id == courseId);
+        var course = coursesContainer?.courses?.Find(c => c.id == courseId);
         if (course == null)
         {
             Debug.LogError("TaskEditorController: course not found " + courseId);
@@ -72,30 +68,26 @@ public class TaskEditorController : MonoBehaviour
                 }
 
                 row.Initialize(activeRows.Count + 1);
-                PopulateNpcDropdown(row);
-                row.SetupDropdownLabels();
-                if (inputFieldExpander != null) row.SetupExpander(inputFieldExpander);
 
+                // 1) Заполнить UI из модели (поля текста, ответы и т.д.)
                 if (model != null)
                 {
                     row.FillFromModel(model);
                     row.SetExistingTaskId(model.id);
-
-                    if (row.dropdownGiver != null && npcNames != null && npcNames.Count > 0)
-                    {
-                        var idx = npcNames.IndexOf(model.giverNpc);
-                        row.dropdownGiver.value = idx >= 0 ? idx : 0;
-                    }
-                    if (row.dropdownReceiver != null && npcNames != null && npcNames.Count > 0)
-                    {
-                        var idx = npcNames.IndexOf(model.receiverNpc);
-                        row.dropdownReceiver.value = idx >= 0 ? idx : 0;
-                    }
                 }
                 else
                 {
                     row.SetExistingTaskId(-1);
                 }
+
+                // 2) Заполнить дропдауны NPC из проектного провайдера (или сценовых префабов)
+                PopulateNpcDropdown(row);
+
+                // 3) Выставить выбранные значения по GUID из модели (делает поиск по giverNpcGuid / receiverNpcGuid)
+                if (model != null) row.ApplyModelSelection(model);
+
+                // Expander
+                if (inputFieldExpander != null) row.SetupExpander(inputFieldExpander);
 
                 activeRows.Add(row);
             }
@@ -114,37 +106,26 @@ public class TaskEditorController : MonoBehaviour
     public void OpenForEdit(TaskModel model)
     {
         if (model == null) { Debug.LogError("TaskEditorController.OpenForEdit: model is null"); return; }
-
         isEditing = true;
         editingTaskId = model.id;
-
         coursesContainer = DataManager.LoadCourses();
         allTasks = DataManager.LoadTasks();
-
         titleText.text = $"Редактирование задания: {model.title} (id={model.id})";
         ClearAllRows();
-
         var go = Instantiate(prefabTaskRow, contentRows);
         var row = go.GetComponent<TaskRow>();
         if (row == null) { Debug.LogError("TaskEditorController: prefabTaskRow missing TaskRow component"); Destroy(go); return; }
-
         row.Initialize(1);
+
+        // NPC options
         PopulateNpcDropdown(row);
         row.SetupDropdownLabels();
+
         if (inputFieldExpander != null) row.SetupExpander(inputFieldExpander);
 
+        // fill fields and selection by GUID
         row.FillFromModel(model);
-
-        if (row.dropdownGiver != null && npcNames != null && npcNames.Count > 0)
-        {
-            var idx = npcNames.IndexOf(model.giverNpc);
-            row.dropdownGiver.value = idx >= 0 ? idx : 0;
-        }
-        if (row.dropdownReceiver != null && npcNames != null && npcNames.Count > 0)
-        {
-            var idx = npcNames.IndexOf(model.receiverNpc);
-            row.dropdownReceiver.value = idx >= 0 ? idx : 0;
-        }
+        row.ApplyModelSelection(model);
 
         activeRows.Clear();
         activeRows.Add(row);
@@ -164,13 +145,17 @@ public class TaskEditorController : MonoBehaviour
             Destroy(go);
             return;
         }
-
         row.Initialize(activeRows.Count + 1);
+
+        // NPC из проекта/ресурсов
         PopulateNpcDropdown(row);
         row.SetupDropdownLabels();
-        if (inputFieldExpander != null) row.SetupExpander(inputFieldExpander);
-        row.SetExistingTaskId(-1);
 
+        // Expander
+        if (inputFieldExpander != null) row.SetupExpander(inputFieldExpander);
+
+        // Новая строка
+        row.SetExistingTaskId(-1);
         activeRows.Add(row);
 
         Canvas.ForceUpdateCanvases();
@@ -187,20 +172,66 @@ public class TaskEditorController : MonoBehaviour
     private void PopulateNpcDropdown(TaskRow row)
     {
         if (row == null) return;
+
+        // Если ты используешь префабы в Resources, ProjectNpcProvider вернёт их.
+        // Иначе можно заменить на SceneNpcRegistry.Instance.GetAll() если сцена с NPC загружена.
+        var npcs = ProjectNpcProvider.GetAllFromResources() ?? new List<NPCIdentity>();
+        // защита: если в проекте нет префабов — попробуем сценовый реестр
+        if (npcs.Count == 0)
+        {
+            npcs = SceneNpcRegistry.Instance.GetAll() ?? new List<NPCIdentity>();
+            Debug.Log($"PopulateNpcDropdown: fallback to SceneNpcRegistry found {npcs.Count} NPC(s).");
+        }
+        else
+        {
+            Debug.Log($"PopulateNpcDropdown: found {npcs.Count} project NPC prefab(s).");
+        }
+
+        var names = npcs.Select(n => n.DisplayName).ToList();
+        var guids = npcs.Select(n => n.Guid).ToList();
+
         if (row.dropdownGiver != null)
         {
             row.dropdownGiver.ClearOptions();
-            row.dropdownGiver.AddOptions(npcNames);
+            if (names.Count > 0)
+            {
+                row.dropdownGiver.AddOptions(names);
+                row.giverOptionGuids = new List<string>(guids);
+                row.dropdownGiver.interactable = true;
+            }
+            else
+            {
+                row.dropdownGiver.AddOptions(new List<string> { "(no NPCs found)" });
+                row.giverOptionGuids = new List<string>();
+                row.dropdownGiver.interactable = false;
+            }
+            row.dropdownGiver.RefreshShownValue();
         }
+
         if (row.dropdownReceiver != null)
         {
             row.dropdownReceiver.ClearOptions();
-            row.dropdownReceiver.AddOptions(npcNames);
+            if (names.Count > 0)
+            {
+                row.dropdownReceiver.AddOptions(names);
+                row.receiverOptionGuids = new List<string>(guids);
+                row.dropdownReceiver.interactable = true;
+            }
+            else
+            {
+                row.dropdownReceiver.AddOptions(new List<string> { "(no NPCs found)" });
+                row.receiverOptionGuids = new List<string>();
+                row.dropdownReceiver.interactable = false;
+            }
+            row.dropdownReceiver.RefreshShownValue();
         }
+
+        row.SetupDropdownLabels();
     }
 
     private void ClearAllRows()
     {
+        if (contentRows == null) return;
         foreach (Transform c in contentRows) Destroy(c.gameObject);
         activeRows.Clear();
     }
@@ -211,14 +242,13 @@ public class TaskEditorController : MonoBehaviour
         coursesContainer = coursesContainer ?? DataManager.LoadCourses();
         allTasks = allTasks ?? DataManager.LoadTasks();
 
-        var course = coursesContainer.courses.Find(c => c.id == contextCourseId);
+        var course = coursesContainer?.courses?.Find(c => c.id == contextCourseId);
         if (course == null)
         {
             Debug.LogError("TaskEditorController: course not found when saving");
             return;
         }
 
-        // обновление существующих или создание новых
         foreach (var row in activeRows)
         {
             if (!row.IsValid(out var msg))
@@ -235,8 +265,8 @@ public class TaskEditorController : MonoBehaviour
                 if (model != null)
                 {
                     model.title = data.title;
-                    model.giverNpc = data.giverIndex >= 0 && data.giverIndex < npcNames.Count ? npcNames[data.giverIndex] : "";
-                    model.receiverNpc = data.receiverIndex >= 0 && data.receiverIndex < npcNames.Count ? npcNames[data.receiverIndex] : "";
+                    model.giverNpcGuid = data.giverNpcGuid;
+                    model.receiverNpcGuid = data.receiverNpcGuid;
                     model.textForGiver = data.textForGiver;
                     model.textForReceiver = data.textForReceiver;
                     model.answers = data.answers.ToList();
@@ -245,13 +275,13 @@ public class TaskEditorController : MonoBehaviour
                 }
                 else
                 {
-                    int nid = allTasks.Any() ? allTasks.Max(t => t.id) + 1 : 1;
+                    int nid = DataManager.GetNextTaskId(allTasks);
                     var tm = new TaskModel
                     {
                         id = nid,
                         title = data.title,
-                        giverNpc = data.giverIndex >= 0 && data.giverIndex < npcNames.Count ? npcNames[data.giverIndex] : "",
-                        receiverNpc = data.receiverIndex >= 0 && data.receiverIndex < npcNames.Count ? npcNames[data.receiverIndex] : "",
+                        giverNpcGuid = data.giverNpcGuid,
+                        receiverNpcGuid = data.receiverNpcGuid,
                         textForGiver = data.textForGiver,
                         textForReceiver = data.textForReceiver,
                         answers = data.answers.ToList(),
@@ -269,15 +299,14 @@ public class TaskEditorController : MonoBehaviour
                 {
                     id = nextId,
                     title = data.title,
-                    giverNpc = data.giverIndex >= 0 && data.giverIndex < npcNames.Count ? npcNames[data.giverIndex] : "",
-                    receiverNpc = data.receiverIndex >= 0 && data.receiverIndex < npcNames.Count ? npcNames[data.receiverIndex] : "",
+                    giverNpcGuid = data.giverNpcGuid,
+                    receiverNpcGuid = data.receiverNpcGuid,
                     textForGiver = data.textForGiver,
                     textForReceiver = data.textForReceiver,
                     answers = data.answers.ToList(),
                     correctAnswerIndexes = data.correctAnswerIndexes.ToList(),
                     hasStars = data.hasStars
                 };
-
                 allTasks.Add(tm);
                 course.taskIds.Add(tm.id);
             }

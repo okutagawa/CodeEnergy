@@ -1,6 +1,6 @@
 using UnityEngine;
-using System.Linq;
 
+[RequireComponent(typeof(CharacterController))] // опционально, убрать если не нужно
 public class PlayerInteract : MonoBehaviour
 {
     [Header("Interaction")]
@@ -11,6 +11,7 @@ public class PlayerInteract : MonoBehaviour
     public bool useScreenCenter = true; // дл€ FPS ставь true
     public LayerMask hoverMask = ~0;    // ограничь слоем NPC если надо
 
+    // runtime
     private NPCInteractable currentHoveredNpc;
     private Outline currentOutline;
 
@@ -20,38 +21,43 @@ public class PlayerInteract : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            // —начала попробуем взаимодействовать с ховернутым NPC, если он в пределах interactRange
-            if (currentHoveredNpc != null)
+            TryInteract();
+        }
+    }
+
+    private void TryInteract()
+    {
+        // если есть ховернутый NPC и в пределах interactRange Ч интерактим его
+        if (currentHoveredNpc != null)
+        {
+            float d = Vector3.Distance(transform.position, currentHoveredNpc.transform.position);
+            if (d <= interactRange)
             {
-                float d = Vector3.Distance(transform.position, currentHoveredNpc.transform.position);
-                if (d <= interactRange)
+                currentHoveredNpc.Interact();
+                return;
+            }
+        }
+
+        // »наче ищем ближайшего NPC в радиусе как запасной вариант
+        Collider[] colliderArray = Physics.OverlapSphere(transform.position, interactRange);
+        NPCInteractable nearest = null;
+        float minDist = float.MaxValue;
+        foreach (Collider c in colliderArray)
+        {
+            if (c.TryGetComponent<NPCInteractable>(out var npc))
+            {
+                float dist = Vector3.Distance(transform.position, c.transform.position);
+                if (dist < minDist)
                 {
-                    currentHoveredNpc.Interact();
-                    return;
+                    minDist = dist;
+                    nearest = npc;
                 }
             }
+        }
 
-            // »наче ищем ближайшего NPC в радиусе как запасной вариант
-            Collider[] colliderArray = Physics.OverlapSphere(transform.position, interactRange);
-            NPCInteractable nearest = null;
-            float minDist = float.MaxValue;
-            foreach (Collider c in colliderArray)
-            {
-                if (c.TryGetComponent<NPCInteractable>(out var npc))
-                {
-                    float dist = Vector3.Distance(transform.position, c.transform.position);
-                    if (dist < minDist)
-                    {
-                        minDist = dist;
-                        nearest = npc;
-                    }
-                }
-            }
-
-            if (nearest != null)
-            {
-                nearest.Interact();
-            }
+        if (nearest != null)
+        {
+            nearest.Interact();
         }
     }
 
@@ -78,11 +84,9 @@ public class PlayerInteract : MonoBehaviour
                     if (currentOutline != null)
                     {
                         currentOutline.enabled = true;
-                        // при желании можно настроить параметры:
-                        // currentOutline.OutlineColor = Color.white;
-                        // currentOutline.OutlineWidth = 4f;
                     }
                 }
+
                 return;
             }
         }
@@ -107,8 +111,10 @@ public class PlayerInteract : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, interactRange);
 
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawRay(Camera.main != null ? Camera.main.transform.position : transform.position,
-                       Camera.main != null ? Camera.main.transform.forward * hoverRange : Vector3.forward * hoverRange);
+        if (Camera.main != null)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * hoverRange);
+        }
     }
 }
