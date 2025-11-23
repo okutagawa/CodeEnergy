@@ -4,40 +4,51 @@ using MyGame.Models;
 [RequireComponent(typeof(NPCIdentity))]
 public class NPCInteractable : MonoBehaviour
 {
-    // <-- добавленные пол€ дл€ хранени€ назначенных задач
     [HideInInspector] public TaskModel assignedGiverTask;
     [HideInInspector] public TaskModel assignedReceiverTask;
 
-    // опционально: дл€ логировани€ / отображени€ имени
     public string DisplayName => GetComponent<NPCIdentity>()?.DisplayName ?? gameObject.name;
     public string Guid => GetComponent<NPCIdentity>()?.Guid ?? "";
 
-    // ¬ Start/OnEnable ничего не требуетс€ Ч назначение делаетс€ извне (TaskAssignmentManager)
+    [Header("Optional bindings")]
+    [Tooltip("Ќазначь ссылку на QuizPanelController в инспекторе (GameScene)")]
+    [SerializeField] private QuizPanelController quizPanelReference;
+
     public virtual void Interact()
     {
-        Debug.Log($"Interact called on {DisplayName} (guid={Guid}). assignedGiverTask={(assignedGiverTask != null ? assignedGiverTask.id.ToString() : "null")}, assignedReceiverTask={(assignedReceiverTask != null ? assignedReceiverTask.id.ToString() : "null")}");
+        Debug.Log($"Interact on {DisplayName} (guid={Guid}). giver={(assignedGiverTask != null ? assignedGiverTask.id.ToString() : "null")}, receiver={(assignedReceiverTask != null ? assignedReceiverTask.id.ToString() : "null")}");
 
-        // ѕоказать текст дающего только если он назначен и текст не пуст
+        // ѕервый NPC: диалог-объ€снение
         if (assignedGiverTask != null && !string.IsNullOrEmpty(assignedGiverTask.textForGiver))
         {
             DialogueUI.Instance?.ShowForTask(assignedGiverTask, true, DisplayName);
             return;
         }
 
-        // ѕоказать текст получател€ если есть и текст не пуст
+        // ¬торой NPC: квиз с карточками
         if (assignedReceiverTask != null && !string.IsNullOrEmpty(assignedReceiverTask.textForReceiver))
         {
-            DialogueUI.Instance?.ShowForTask(assignedReceiverTask, false, DisplayName);
+            var quizPanel = quizPanelReference != null ? quizPanelReference : FindObjectOfType<QuizPanelController>();
+            if (quizPanel == null)
+            {
+                Debug.LogError($"NPCInteractable: QuizPanelController not found in scene for {DisplayName}.");
+                return;
+            }
+
+            var quizTask = new QuizTask
+            {
+                title = assignedReceiverTask.title,
+                textForReceiver = assignedReceiverTask.textForReceiver,
+                answers = assignedReceiverTask.answers != null ? new System.Collections.Generic.List<string>(assignedReceiverTask.answers) : new System.Collections.Generic.List<string>(),
+                correctAnswerIndexes = assignedReceiverTask.correctAnswerIndexes != null ? new System.Collections.Generic.List<int>(assignedReceiverTask.correctAnswerIndexes) : new System.Collections.Generic.List<int>(),
+                hasStars = assignedReceiverTask.hasStars
+            };
+
+            quizPanel.Show(quizTask);
             return;
         }
 
-        // ≈сли один из тасков есть, но текст пуст Ч логнуть и показать fallback
-        if (assignedGiverTask != null || assignedReceiverTask != null)
-        {
-            Debug.LogWarning($"Interact: task exists for {DisplayName} but text is empty. giverText='{assignedGiverTask?.textForGiver}', receiverText='{assignedReceiverTask?.textForReceiver}'");
-        }
-
+        // Fallback
         DialogueUI.Instance?.Show(DisplayName, "(empty dialog)");
     }
-
 }

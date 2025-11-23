@@ -19,6 +19,7 @@ public class UIManager : MonoBehaviour
     private CourseListManager _courseListManager;
     private TasksListManager _tasksListManager;
 
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }

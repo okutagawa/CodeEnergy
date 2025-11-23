@@ -11,7 +11,6 @@ public class DialogueUI : MonoBehaviour
     public Text bodyText;
     public Button closeButton;
 
-    // Чтобы восстановить предыдущее состояние курсора
     private CursorLockMode prevLockState;
     private bool prevVisible;
 
@@ -32,20 +31,20 @@ public class DialogueUI : MonoBehaviour
         if (titleText != null) titleText.text = title ?? "";
         if (bodyText != null) bodyText.text = text ?? "";
 
-        // сохранить старое состояние курсора
-        prevLockState = Cursor.lockState;
-        prevVisible = Cursor.visible;
-
-        // показать панель и курсор
+        CursorUIManager.Instance?.ShowCursor();
         panel.SetActive(true);
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
     }
 
     public void ShowForTask(TaskModel task, bool forGiver, string npcDisplayName)
     {
+        if (!forGiver)
+        {
+            Debug.Log($"DialogueUI: receiver flow handled by QuizPanel. Skipping DialogueUI for {npcDisplayName}.");
+            return;
+        }
+
         if (task == null) { Show(npcDisplayName, "(no task)"); return; }
-        var t = forGiver ? task.textForGiver : task.textForReceiver;
+        var t = task.textForGiver;
         Show(npcDisplayName, string.IsNullOrEmpty(t) ? "(empty dialog)" : t);
     }
 
@@ -53,8 +52,6 @@ public class DialogueUI : MonoBehaviour
     {
         if (panel == null) return;
         panel.SetActive(false);
-        // восстановить прежнее состояние курсора
-        Cursor.lockState = prevLockState;
-        Cursor.visible = prevVisible;
+        CursorUIManager.Instance?.HideCursor();
     }
 }

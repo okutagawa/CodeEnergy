@@ -12,6 +12,8 @@ public class DialogManager : MonoBehaviour
     public Text bodyText;
     public Button closeButton;
 
+    private Action onDialogClosed;
+
     void Awake()
     {
         if (Instance != null && Instance != this) Destroy(gameObject);
@@ -20,27 +22,30 @@ public class DialogManager : MonoBehaviour
 
     void Start()
     {
-        dialogPanel.SetActive(false);
-        closeButton.onClick.AddListener(CloseDialog);
+        if (dialogPanel != null) dialogPanel.SetActive(false);
+        if (closeButton != null) closeButton.onClick.AddListener(CloseDialog);
     }
 
     public void OpenDialog(string title, string body, Action onClose = null)
     {
-        titleText.text = title;
-        bodyText.text = body;
-        dialogPanel.SetActive(true);
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        if (titleText != null) titleText.text = title;
+        if (bodyText != null) bodyText.text = body;
+
+        if (dialogPanel != null) dialogPanel.SetActive(true);
+
+        // ¬место пр€мого управлени€ курсором Ч через CursorUIManager
+        CursorUIManager.Instance?.ShowCursor();
+
         onDialogClosed = onClose;
     }
 
-    private Action onDialogClosed;
-
     public void CloseDialog()
     {
-        dialogPanel.SetActive(false);
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (dialogPanel != null) dialogPanel.SetActive(false);
+
+        // —нимаем запрос на курсор
+        CursorUIManager.Instance?.HideCursor();
+
         onDialogClosed?.Invoke();
         onDialogClosed = null;
     }
