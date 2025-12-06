@@ -11,12 +11,9 @@ public class DialogueUI : MonoBehaviour
     public Text bodyText;
     public Button closeButton;
 
-    private CursorLockMode prevLockState;
-    private bool prevVisible;
-
     void Awake()
     {
-        if (Instance == null) Instance = this; else Destroy(this);
+        if (Instance == null) Instance = this; else { Destroy(this); return; }
         if (panel != null) panel.SetActive(false);
         if (closeButton != null)
         {
@@ -31,7 +28,6 @@ public class DialogueUI : MonoBehaviour
         if (titleText != null) titleText.text = title ?? "";
         if (bodyText != null) bodyText.text = text ?? "";
 
-        CursorUIManager.Instance?.ShowCursor();
         panel.SetActive(true);
     }
 
@@ -43,7 +39,12 @@ public class DialogueUI : MonoBehaviour
             return;
         }
 
-        if (task == null) { Show(npcDisplayName, "(no task)"); return; }
+        if (task == null)
+        {
+            Show(npcDisplayName, "(no task)");
+            return;
+        }
+
         var t = task.textForGiver;
         Show(npcDisplayName, string.IsNullOrEmpty(t) ? "(empty dialog)" : t);
     }
@@ -52,6 +53,18 @@ public class DialogueUI : MonoBehaviour
     {
         if (panel == null) return;
         panel.SetActive(false);
-        CursorUIManager.Instance?.HideCursor();
     }
+
+    //void OnDisable()
+    //{
+    //    // Страховка на случай скрытия панели без вызова Hide()
+    //    if (CursorUIManager.Instance != null && CursorUIManager.Instance.IsUiFocused)
+    //        CursorUIManager.Instance.ExitUiFocus();
+    //}
+
+    //void OnDestroy()
+    //{
+    //    if (CursorUIManager.Instance != null && CursorUIManager.Instance.IsUiFocused)
+    //        CursorUIManager.Instance.ExitUiFocus();
+    //}
 }

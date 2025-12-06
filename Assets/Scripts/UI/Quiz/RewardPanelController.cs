@@ -29,9 +29,6 @@ public class RewardPanelController : MonoBehaviour
                 starImages[i].enabled = enabled;
         }
 
-        // Попросим менеджер курсора показать курсор (reference counted)
-        CursorUIManager.Instance?.ShowCursor();
-
         // Показываем сам объект (если префаб инстанцируется, он обычно уже активен)
         gameObject.SetActive(true);
     }
@@ -40,9 +37,6 @@ public class RewardPanelController : MonoBehaviour
     {
         // Скрываем панель награды
         gameObject.SetActive(false);
-
-        // Уменьшаем запрос к менеджеру курсора
-        CursorUIManager.Instance?.HideCursor();
 
         // Закрываем QuizPanel (если он открыт поверх или под)
         // Попытаемся найти QuizPanelController в родительских объектах / сцене

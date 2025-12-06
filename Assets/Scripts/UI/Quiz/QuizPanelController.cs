@@ -1,4 +1,3 @@
-// Assets/Scripts/UI/Quiz/QuizPanelController.cs
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +21,7 @@ public class QuizPanelController : MonoBehaviour
     private readonly List<QuizCardController> _cards = new List<QuizCardController>();
     private QuizTask _task;
     private bool _isMulti;
+    private NPCInteractable _sourceNpc;
 
     private void Awake()
     {
@@ -31,8 +31,10 @@ public class QuizPanelController : MonoBehaviour
     }
 
     // ВАЖНО: сначала активируем объект, затем запускаем корутину
-    public void Show(QuizTask task)
+    public void Show(QuizTask task, NPCInteractable sourceNpc = null)
     {
+        _sourceNpc = sourceNpc;
+        _task = task;
         gameObject.SetActive(true);
         StopAllCoroutines();
         StartCoroutine(ShowRoutine(task));
@@ -62,7 +64,6 @@ public class QuizPanelController : MonoBehaviour
                 if (child == null) continue;
                 LayoutRebuilder.ForceRebuildLayoutImmediate(child);
 
-                // Помечаем графику dirty для надежного перерендера
                 var gfxs = child.GetComponentsInChildren<Graphic>(true);
                 foreach (var g in gfxs) g.SetAllDirty();
             }
@@ -72,7 +73,6 @@ public class QuizPanelController : MonoBehaviour
         if (nextButton != null) nextButton.gameObject.SetActive(false);
         if (submitButton != null) submitButton.interactable = true;
 
-        CursorUIManager.Instance?.ShowCursor();
     }
 
     private void CreateCards(List<string> answers)
@@ -122,6 +122,9 @@ public class QuizPanelController : MonoBehaviour
 
         if (isCorrect)
         {
+            // ВАЖНО: подтверждаем старт/выполнение задания у NPC
+            _sourceNpc?.ConfirmStartTask();
+
             if (_task.hasStars && rewardPanelPrefab != null)
             {
                 var reward = Instantiate(rewardPanelPrefab, transform.parent);
@@ -149,10 +152,12 @@ public class QuizPanelController : MonoBehaviour
 
     private void ClosePanel()
     {
+        _task = null;
+        _sourceNpc = null;
         gameObject.SetActive(false);
-        CursorUIManager.Instance?.HideCursor();
     }
 
+    // Закрытие по команде из Reward (не трогаем курсор здесь, чтобы избежать двойного Exit)
     public void ForceCloseFromReward()
     {
         gameObject.SetActive(false);

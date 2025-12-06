@@ -153,13 +153,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84b9616eecaed5349b93ba07762c215f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCamera: {fileID: 0}
-  cameraRoot: {fileID: 399348865}
-  focusDuration: 0.6
-  returnDuration: 0.6
-  componentsToDisable:
-  - {fileID: 767234244}
-  - {fileID: 399348866}
 --- !u!4 &30748490
 Transform:
   m_ObjectHideFlags: 0
@@ -179,6 +172,11 @@ Transform:
 Transform:
   m_CorrespondingSourceObject: {fileID: 6901139296978759150, guid: 2159f826a7fb5944b8baff7839d55f5b, type: 3}
   m_PrefabInstance: {fileID: 2102377843}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &97331536 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3396423652175368240, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
+  m_PrefabInstance: {fileID: 1577703772}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &103177891 stripped
 Transform:
@@ -1079,7 +1077,6 @@ MonoBehaviour:
   _player: {fileID: 767234243}
   _verticalMin: -80
   _verticalMax: 80
-  useUiManagerCheck: 1
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -3422,7 +3419,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3396423652175368240, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1577703777}
   m_SourcePrefab: {fileID: 100100000, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
 --- !u!224 &1577703773 stripped
 RectTransform:
@@ -3434,10 +3434,22 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7919781881496637906, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
   m_PrefabInstance: {fileID: 1577703772}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 97331536}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5cdca1abc768c4f4cb92f0eaa81f60a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1577703777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 97331536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 322be23b61da7484bb0b2c4f8e755753, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &1582176941
@@ -3767,6 +3779,7 @@ GameObject:
   - component: {fileID: 1923975826}
   - component: {fileID: 1923975825}
   - component: {fileID: 1923975827}
+  - component: {fileID: 1923975828}
   m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
@@ -3850,6 +3863,18 @@ MonoBehaviour:
   titleText: {fileID: 1519492493}
   bodyText: {fileID: 646243247}
   closeButton: {fileID: 1119239801}
+--- !u!114 &1923975828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1923975823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 322be23b61da7484bb0b2c4f8e755753, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &1925812647 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6901139296978759150, guid: 2159f826a7fb5944b8baff7839d55f5b, type: 3}

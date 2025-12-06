@@ -1,106 +1,89 @@
 using UnityEngine;
-using System.Diagnostics;
 
 public class CursorUIManager : MonoBehaviour
 {
     public static CursorUIManager Instance { get; private set; }
 
-    private int _requests = 0;
-    private CursorLockMode _prevLockState;
-    private bool _prevVisible;
-    private bool _hasSavedPrevState = false;
+    // Счётчик активных UI (модальные панели, диалоги, квизы и т.п.)
+    private int _uiFocusCount = 0;
 
-    private void Awake()
+    // Сохранение предыдущего состояния курсора для корректного возврата
+    private CursorLockMode _prevLockState = CursorLockMode.Locked;
+    private bool _prevVisible = false;
+    private bool _hasPrev = false;
+
+    void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        // Базовое состояние: игра управляется мышью, курсор скрыт и залочен
+        ApplyCursor(visible: false, lockMode: CursorLockMode.Locked);
     }
 
-    private float _lastStackLog = -10f;
-    private void Update()
+    // Включение UI-режима: курсор видим по всему экрану, разблокирован; камера должна игнорировать ввод
+    public void EnterUiFocus()
     {
-        // Если есть активные запросы — убеждаемся, что курсор видим (защищает от случайных внешних переключений)
-        if (_requests > 0)
-        {
-            if (!Cursor.visible || Cursor.lockState != CursorLockMode.None)
-            {
-                // Throttle stacktrace logs to once per second to avoid spam
-                if (Time.unscaledTime - _lastStackLog > 1f)
-                {
-                    _lastStackLog = Time.unscaledTime;
-                    UnityEngine.Debug.LogWarning($"[CursorUIManager] Forcing cursor visible. Before: visible={Cursor.visible}, lockState={Cursor.lockState}, requests={_requests}\nStack:\n{new StackTrace(1, true)}");
-                }
-            }
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-        }
-    }
-
-    // Вызвать, когда UI хочет показать курсор (инкремент)
-    public void ShowCursor()
-    {
-        if (!_hasSavedPrevState)
+        if (!_hasPrev)
         {
             _prevLockState = Cursor.lockState;
             _prevVisible = Cursor.visible;
-            _hasSavedPrevState = true;
+            _hasPrev = true;
         }
-
-        _requests = Mathf.Max(0, _requests) + 1;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        _uiFocusCount = Mathf.Max(0, _uiFocusCount) + 1;
+        ApplyCursor(visible: true, lockMode: CursorLockMode.None);
     }
 
-    // Вызвать, когда UI больше не нуждается в курсоре (декремент)
-    public void HideCursor()
+    // Выход из UI-режима: уменьшаем счётчик; если он ноль — восстанавливаем прошлое состояние
+    public void ExitUiFocus()
     {
-        _requests = Mathf.Max(0, _requests - 1);
-        if (_requests == 0 && _hasSavedPrevState)
+        if (_uiFocusCount <= 0)
         {
-            Cursor.lockState = _prevLockState;
-            Cursor.visible = _prevVisible;
-            _hasSavedPrevState = false;
+            _uiFocusCount = 0;
+            return;
+        }
+        _uiFocusCount--;
+
+        if (_uiFocusCount == 0 && _hasPrev)
+        {
+            ApplyCursor(_prevVisible, _prevLockState);
+            _hasPrev = false;
         }
     }
 
-    // Принудительное восстановление состояния (очищает все запросы)
+    // Принудительное восстановление (например, при смене сцены)
     public void ForceRestore()
     {
-        _requests = 0;
-        if (_hasSavedPrevState)
+        _uiFocusCount = 0;
+        if (_hasPrev)
         {
-            Cursor.lockState = _prevLockState;
-            Cursor.visible = _prevVisible;
-            _hasSavedPrevState = false;
+            ApplyCursor(_prevVisible, _prevLockState);
+            _hasPrev = false;
+        }
+        else
+        {
+            ApplyCursor(visible: false, lockMode: CursorLockMode.Locked);
         }
     }
 
-    private void LateUpdate()
+    // Защитный хук: если при активном UI кто-то внезапно залочил курсор — вернём состояние
+    void LateUpdate()
     {
-        if (_requests > 0)
+        if (_uiFocusCount > 0)
         {
             if (!Cursor.visible || Cursor.lockState != CursorLockMode.None)
             {
-                if (Time.unscaledTime - _lastStackLog > 1f)
-                {
-                    _lastStackLog = Time.unscaledTime;
-                    UnityEngine.Debug.LogWarning($"[CursorUIManager] LateUpdate force. Before: visible={Cursor.visible}, lockState={Cursor.lockState}, requests={_requests}\nStack:\n{new StackTrace(1, true)}");
-                }
+                ApplyCursor(visible: true, lockMode: CursorLockMode.None);
             }
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
         }
     }
 
-    private void OnApplicationFocus(bool hasFocus)
+    private void ApplyCursor(bool visible, CursorLockMode lockMode)
     {
-        if (_requests > 0 && hasFocus)
-        {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-        }
+        Cursor.visible = visible;
+        Cursor.lockState = lockMode;
     }
 
-    public int GetRequestCount() => _requests;
+    public bool IsUiFocused => _uiFocusCount > 0;
+    public int GetFocusCount() => _uiFocusCount;
 }
