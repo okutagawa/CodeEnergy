@@ -40,13 +40,16 @@ public class TaskEditorController : MonoBehaviour
         isEditing = false;
         editingTaskId = -1;
         contextCourseId = courseId;
+
+        Debug.Log($"[TaskEditor] OpenForCourseEditor: courseId={courseId}");
+
         coursesContainer = DataManager.LoadCourses();
         allTasks = DataManager.LoadTasks();
 
         var course = coursesContainer?.courses?.Find(c => c.id == courseId);
         if (course == null)
         {
-            Debug.LogError("TaskEditorController: course not found " + courseId);
+            Debug.LogError($"TaskEditorController: course not found {courseId}");
             return;
         }
 
@@ -106,10 +109,32 @@ public class TaskEditorController : MonoBehaviour
     public void OpenForEdit(TaskModel model)
     {
         if (model == null) { Debug.LogError("TaskEditorController.OpenForEdit: model is null"); return; }
-        isEditing = true;
-        editingTaskId = model.id;
+
+        // Попытаемся определить courseId, если он не передан явно
         coursesContainer = DataManager.LoadCourses();
         allTasks = DataManager.LoadTasks();
+
+        int foundCourseId = -1;
+        if (coursesContainer != null && coursesContainer.courses != null)
+        {
+            foreach (var c in coursesContainer.courses)
+            {
+                if (c.taskIds != null && c.taskIds.Contains(model.id))
+                {
+                    foundCourseId = c.id;
+                    break;
+                }
+            }
+        }
+
+        if (foundCourseId == -1)
+        {
+            Debug.LogWarning($"TaskEditorController.OpenForEdit: course for task id={model.id} not found. contextCourseId will remain -1 until save.");
+        }
+
+        isEditing = true;
+        editingTaskId = model.id;
+        contextCourseId = foundCourseId; // может быть -1, но OnSaveAndExit обработает это
         titleText.text = $"Редактирование задания: {model.title} (id={model.id})";
         ClearAllRows();
         var go = Instantiate(prefabTaskRow, contentRows);
@@ -242,13 +267,33 @@ public class TaskEditorController : MonoBehaviour
         coursesContainer = coursesContainer ?? DataManager.LoadCourses();
         allTasks = allTasks ?? DataManager.LoadTasks();
 
-        var course = coursesContainer?.courses?.Find(c => c.id == contextCourseId);
-        if (course == null)
+        Debug.Log($"[TaskEditor] OnSaveAndExit called. contextCourseId={contextCourseId} isEditing={isEditing} editingTaskId={editingTaskId} activeRows={activeRows.Count}");
+
+        // Если контекст курса не установлен (например, открыли одиночный редактор), попробуем найти курс по taskId
+        if (contextCourseId <= 0)
+        {
+            if (isEditing && editingTaskId >= 0)
+            {
+                var found = coursesContainer?.courses?.FirstOrDefault(c => c.taskIds != null && c.taskIds.Contains(editingTaskId));
+                if (found != null) contextCourseId = found.id;
+                Debug.Log($"[TaskEditor] inferred contextCourseId={contextCourseId} for editingTaskId={editingTaskId}");
+            }
+        }
+
+        if (contextCourseId <= 0)
         {
             Debug.LogError("TaskEditorController: course not found when saving");
             return;
         }
 
+        var course = coursesContainer?.courses?.Find(c => c.id == contextCourseId);
+        if (course == null)
+        {
+            Debug.LogError($"TaskEditorController: course not found when saving (contextCourseId={contextCourseId})");
+            return;
+        }
+
+        // Обновляем/создаём задачи из строк
         foreach (var row in activeRows)
         {
             if (!row.IsValid(out var msg))
@@ -272,9 +317,16 @@ public class TaskEditorController : MonoBehaviour
                     model.answers = data.answers.ToList();
                     model.correctAnswerIndexes = data.correctAnswerIndexes.ToList();
                     model.hasStars = data.hasStars;
+
+                    // Убедимся, что модель привязана к курсу
+                    if (course.taskIds == null) course.taskIds = new List<int>();
+                    if (!course.taskIds.Contains(model.id)) course.taskIds.Add(model.id);
+
+                    Debug.Log($"[TaskEditor] Updated task id={model.id} and ensured it is in course {course.id}");
                 }
                 else
                 {
+                    // Если модель не найдена в allTasks — создаём новую и добавляем в course
                     int nid = DataManager.GetNextTaskId(allTasks);
                     var tm = new TaskModel
                     {
@@ -289,7 +341,9 @@ public class TaskEditorController : MonoBehaviour
                         hasStars = data.hasStars
                     };
                     allTasks.Add(tm);
+                    if (course.taskIds == null) course.taskIds = new List<int>();
                     course.taskIds.Add(tm.id);
+                    Debug.Log($"[TaskEditor] Created missing task id={tm.id} and added to course {course.id}");
                 }
             }
             else
@@ -308,13 +362,34 @@ public class TaskEditorController : MonoBehaviour
                     hasStars = data.hasStars
                 };
                 allTasks.Add(tm);
+                if (course.taskIds == null) course.taskIds = new List<int>();
                 course.taskIds.Add(tm.id);
+                Debug.Log($"[TaskEditor] Created new task id={tm.id} and added to course {course.id}");
             }
         }
 
+        // Сохраняем данные
         DataManager.SaveTasks(allTasks);
         DataManager.SaveCourses(coursesContainer);
+        Debug.Log($"[TaskEditor] Saved tasks ({allTasks.Count}) and courses.");
 
-        UIManager.Instance?.OpenTasksWindowForCourse(contextCourseId);
+        // Скрываем редактор и возвращаемся в список задач курса
+        gameObject.SetActive(false);
+
+        if (UIManager.Instance != null)
+        {
+            Debug.Log($"[TaskEditor] Opening tasks window for courseId={contextCourseId}");
+            UIManager.Instance.OpenTasksWindowForCourse(contextCourseId);
+        }
+        else
+        {
+            Debug.LogWarning("[TaskEditor] UIManager.Instance is null, cannot open tasks window");
+        }
+
+        // Очистим контекст
+        isEditing = false;
+        editingTaskId = -1;
+        contextCourseId = -1;
+        activeRows.Clear();
     }
 }

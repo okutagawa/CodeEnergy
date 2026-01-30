@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a2040ece5d031b843b3deb3877d3f3d6
+guid: 4b648e0393737da49ab4acc95a04504e
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,43 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Color texture
-    second: {fileID: 2100000, guid: 11783c05facd0c149ad53d328816c467, type: 2}
+      name: Body_Blue
+    second: {fileID: 2100000, guid: c8ca53c408879234ebc188700c6ca957, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Engine_Glow
+    second: {fileID: 2100000, guid: 353c0c30742538a45bdc79fc0de1d743, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Engine_Start
+    second: {fileID: 2100000, guid: a9e2d044037e1a943a92d0a990d8a05a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Eye_First
+    second: {fileID: 2100000, guid: 40756760d37a66449a47e37ad9369aec, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Eye_Obl
+    second: {fileID: 2100000, guid: 9fdc9360608248041ba8418ab84385fb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Smile_Blue
+    second: {fileID: 2100000, guid: 52cdc1fe74e8f8b42896fcddbb226ca6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wings_Black
+    second: {fileID: 2100000, guid: 74d9b6e5ac469ab4c88a5a41dc091bf3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wings_Grey
+    second: {fileID: 2100000, guid: 0dfb8b9b3af5c1d4da947604a97a9031, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -21,8 +56,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -42,7 +75,7 @@ ModelImporter:
     lODScreenPercentages: []
     globalScale: 1
     meshCompression: 0
-    addColliders: 1
+    addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
     importPhysicalCameras: 1
@@ -112,10 +145,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 286054
-  packageName: Low Poly Fantasy Village
-  packageVersion: 0.1.0
-  assetPath: Assets/OccaSoftware/Low Poly Fantasy Village/Meshes/pine tree5.fbx
-  uploadId: 670656
