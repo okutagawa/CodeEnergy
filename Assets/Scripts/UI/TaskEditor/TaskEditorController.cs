@@ -198,23 +198,56 @@ public class TaskEditorController : MonoBehaviour
     {
         if (row == null) return;
 
-        // Если ты используешь префабы в Resources, ProjectNpcProvider вернёт их.
-        // Иначе можно заменить на SceneNpcRegistry.Instance.GetAll() если сцена с NPC загружена.
-        var npcs = ProjectNpcProvider.GetAllFromResources() ?? new List<NPCIdentity>();
-        // защита: если в проекте нет префабов — попробуем сценовый реестр
-        if (npcs.Count == 0)
+        // 1) Попробуем получить NPC из SceneNpcRegistry (приоритет)
+        try
         {
-            npcs = SceneNpcRegistry.Instance.GetAll() ?? new List<NPCIdentity>();
-            Debug.Log($"PopulateNpcDropdown: fallback to SceneNpcRegistry found {npcs.Count} NPC(s).");
+            // Попытка явно пересобрать индекс
+            SceneNpcRegistry.Instance.RebuildIndex();
         }
-        else
+        catch { /* безопасно игнорируем, если Instance ещё не готов */ }
+
+        var sceneNpcs = SceneNpcRegistry.Instance?.GetAll() ?? new List<NPCIdentity>();
+
+        // 2) Если registry вернул 0 — попробуем напрямую найти компоненты (включая неактивные)
+        if (sceneNpcs.Count == 0)
         {
-            Debug.Log($"PopulateNpcDropdown: found {npcs.Count} project NPC prefab(s).");
+            var direct = FindObjectsOfType<NPCIdentity>(true);
+            if (direct != null && direct.Length > 0)
+            {
+                sceneNpcs = new List<NPCIdentity>(direct);
+                Debug.Log($"[TaskEditor] PopulateNpcDropdown: fallback direct FindObjectsOfType found {sceneNpcs.Count} NPC(s).");
+            }
         }
 
-        var names = npcs.Select(n => n.DisplayName).ToList();
-        var guids = npcs.Select(n => n.Guid).ToList();
+        // 3) Получим проектные префабы (как fallback)
+        var projectNpcs = ProjectNpcProvider.GetAllFromResources() ?? new List<NPCIdentity>();
 
+        // 4) Объединяем: сценовые (включая неактивные) + проектные, убираем дубликаты по GUID
+        var combined = new List<NPCIdentity>();
+        var seenGuids = new HashSet<string>();
+
+        // Добавляем сначала сценовые, сортируя активные первыми
+        foreach (var n in sceneNpcs.OrderByDescending(n => n.gameObject.activeInHierarchy))
+        {
+            if (string.IsNullOrEmpty(n.Guid)) continue;
+            if (seenGuids.Add(n.Guid)) combined.Add(n);
+        }
+
+        // Затем проектные префабы (если GUID ещё не встречался)
+        foreach (var n in projectNpcs)
+        {
+            if (n == null) continue;
+            if (string.IsNullOrEmpty(n.Guid)) continue;
+            if (seenGuids.Add(n.Guid)) combined.Add(n);
+        }
+
+        Debug.Log($"[TaskEditor] PopulateNpcDropdown: combined NPC count={combined.Count} (scene={sceneNpcs.Count}, project={projectNpcs.Count})");
+
+        // 5) Подготовим списки имён и GUID
+        var names = combined.Select(n => n.DisplayName).ToList();
+        var guids = combined.Select(n => n.Guid).ToList();
+
+        // 6) Заполним dropdown'ы и опции GUID в row
         if (row.dropdownGiver != null)
         {
             row.dropdownGiver.ClearOptions();
@@ -252,7 +285,13 @@ public class TaskEditorController : MonoBehaviour
         }
 
         row.SetupDropdownLabels();
+
+        // 7) Отладочный вывод итоговых опций (полезно при тестах)
+        foreach (var n in combined)
+            Debug.Log($"[TaskEditor] NPC option: name={n.DisplayName} guid={n.Guid} active={n.gameObject.activeInHierarchy}");
     }
+
+
 
     private void ClearAllRows()
     {
