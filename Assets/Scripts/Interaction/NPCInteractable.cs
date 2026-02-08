@@ -1,4 +1,3 @@
-// Assets/Scripts/Interaction/NPCInteractable.cs
 using UnityEngine;
 using MyGame.Models;
 
@@ -14,7 +13,6 @@ public class NPCInteractable : MonoBehaviour
     [Header("Optional bindings")]
     [SerializeField] private QuizPanelController quizPanelReference;
 
-    // Этот метод вызывается TaskAssignmentManager после загрузки/изменения очереди
     public void SetAssignedTasks(TaskModel peekForGiver, TaskModel peekForReceiver)
     {
         _peekGiverTask = peekForGiver;
@@ -25,14 +23,12 @@ public class NPCInteractable : MonoBehaviour
     {
         Debug.Log($"Interact on {DisplayName} (guid={Guid}). giver={(_peekGiverTask != null ? _peekGiverTask.id.ToString() : "null")}, receiver={(_peekReceiverTask != null ? _peekReceiverTask.id.ToString() : "null")}");
 
-        // Giver: показываем теорию (peek), не удаляем задачу
         if (_peekGiverTask != null && !string.IsNullOrEmpty(_peekGiverTask.textForGiver))
         {
             DialogueUI.Instance?.ShowForTask(_peekGiverTask, true, DisplayName);
             return;
         }
 
-        // Receiver: показываем квиз для peek (потом при подтверждении — GetNext)
         if (_peekReceiverTask != null && !string.IsNullOrEmpty(_peekReceiverTask.textForReceiver))
         {
             var quizPanel = quizPanelReference != null ? quizPanelReference : FindObjectOfType<QuizPanelController>();
@@ -42,8 +38,11 @@ public class NPCInteractable : MonoBehaviour
                 return;
             }
 
+            Debug.Log($"[DEBUG] Showing quiz for task id={_peekReceiverTask.id}");
+
             var quizTask = new QuizTask
             {
+                taskId = _peekReceiverTask.id,
                 title = _peekReceiverTask.title,
                 textForReceiver = _peekReceiverTask.textForReceiver,
                 answers = _peekReceiverTask.answers != null ? new System.Collections.Generic.List<string>(_peekReceiverTask.answers) : new System.Collections.Generic.List<string>(),
@@ -51,19 +50,16 @@ public class NPCInteractable : MonoBehaviour
                 hasStars = _peekReceiverTask.hasStars
             };
 
-            // Передаём ссылку на этого NPC в QuizPanel, чтобы при успешном выполнении он мог подтвердить старт задачи
             quizPanel.Show(quizTask, this);
             return;
         }
 
-        // Fallback
         DialogueUI.Instance?.Show(DisplayName, "(empty dialog)");
     }
 
-    // Вызывается, когда игрок подтвердил/успешно выполнил задание у Receiver
     public void ConfirmStartTask()
     {
-        var manager = FindObjectOfType<TaskAssignmentManager>();
+        var manager = TaskAssignmentManager.Instance ?? FindObjectOfType<TaskAssignmentManager>();
         if (manager == null)
         {
             Debug.LogError("ConfirmStartTask: TaskAssignmentManager not found");
@@ -74,7 +70,10 @@ public class NPCInteractable : MonoBehaviour
         if (started != null)
         {
             Debug.Log($"NPC {DisplayName} confirmed start of task {started.id}");
-            // пометка в GameState и т.д.
+        }
+        else
+        {
+            Debug.LogWarning($"NPC {DisplayName} ConfirmStartTask: no task returned for receiver guid={Guid}");
         }
     }
 }

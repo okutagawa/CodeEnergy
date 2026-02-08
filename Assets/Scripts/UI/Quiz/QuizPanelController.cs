@@ -30,7 +30,6 @@ public class QuizPanelController : MonoBehaviour
         if (closeButton != null) closeButton.onClick.AddListener(ClosePanel);
     }
 
-    // ВАЖНО: сначала активируем объект, затем запускаем корутину
     public void Show(QuizTask task, NPCInteractable sourceNpc = null)
     {
         _sourceNpc = sourceNpc;
@@ -51,10 +50,8 @@ public class QuizPanelController : MonoBehaviour
         ClearCards();
         CreateCards(task?.answers ?? new List<string>());
 
-        // Ждём кадр, чтобы все инстансы корректно инициализировались
         yield return null;
 
-        // Форсируем обновление UI, чтобы текст отрендерился сразу
         Canvas.ForceUpdateCanvases();
         if (cardsContainer != null)
         {
@@ -72,7 +69,6 @@ public class QuizPanelController : MonoBehaviour
 
         if (nextButton != null) nextButton.gameObject.SetActive(false);
         if (submitButton != null) submitButton.interactable = true;
-
     }
 
     private void CreateCards(List<string> answers)
@@ -122,8 +118,14 @@ public class QuizPanelController : MonoBehaviour
 
         if (isCorrect)
         {
-            // ВАЖНО: подтверждаем старт/выполнение задания у NPC
             _sourceNpc?.ConfirmStartTask();
+
+            if (_task != null)
+            {
+                GameState.Instance?.MarkTaskCompleted(_task.taskId);
+                Debug.Log($"[DEBUG] Marked completed task {_task.taskId}. Completed count={GameState.Instance.GetData().completedTaskIds.Count}");
+                TaskAssignmentManager.Instance?.ExportQueuesToGameState();
+            }
 
             if (_task.hasStars && rewardPanelPrefab != null)
             {
@@ -157,7 +159,6 @@ public class QuizPanelController : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // Закрытие по команде из Reward (не трогаем курсор здесь, чтобы избежать двойного Exit)
     public void ForceCloseFromReward()
     {
         gameObject.SetActive(false);

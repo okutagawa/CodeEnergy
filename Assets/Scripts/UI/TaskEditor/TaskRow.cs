@@ -64,7 +64,7 @@ public class TaskRow : MonoBehaviour
         if (inputTextGiver != null) inputTextGiver.text = model.textForGiver ?? "";
         if (inputTextReceiver != null) inputTextReceiver.text = model.textForReceiver ?? "";
 
-        if (inputAnswers != null) inputAnswers.text = model.answers != null ? string.Join(";", model.answers) : "";
+        if (inputAnswers != null) inputAnswers.text = model.answers != null ? string.Join(" | ", model.answers) : "";
         if (inputCorrect != null) inputCorrect.text = model.correctAnswerIndexes != null
             ? string.Join(",", model.correctAnswerIndexes.Select(i => correctIndexesAreOneBased ? (i + 1).ToString() : i.ToString()))
             : "";
@@ -216,12 +216,14 @@ public class TaskRow : MonoBehaviour
     {
         if (inputAnswers == null) return new string[0];
         var raw = inputAnswers.text ?? "";
-        var parts = raw.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+        // Ќовый разделитель: вертикальна€ черта |
+        var parts = raw.Split(new[] { '|' }, System.StringSplitOptions.RemoveEmptyEntries)
                        .Select(s => s.Trim())
                        .Where(s => s.Length > 0)
                        .ToArray();
         return parts;
     }
+
 
     public int[] GetCorrectIndices()
     {

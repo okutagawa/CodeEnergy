@@ -12208,6 +12208,7 @@ GameObject:
   - component: {fileID: 767234245}
   - component: {fileID: 767234244}
   - component: {fileID: 767234246}
+  - component: {fileID: 767234247}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -12290,6 +12291,19 @@ MonoBehaviour:
   hoverMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &767234247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767234242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43ec90a4c51d52a4ea870b8b3e543b8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSaveHandler
+  autoSaveInterval: 5
 --- !u!1001 &769349000
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,17 +1,37 @@
-using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using MyGame.Models;
 using MyGame.Data;
 
 public class TaskAssignmentManager : MonoBehaviour
 {
-    // Отдельные очереди для ролей (ключи — string, это удобнее для SceneNpcRegistry.FindByGuid)
+    public static TaskAssignmentManager Instance { get; private set; }
+
     private readonly Dictionary<string, List<TaskModel>> _giverTasksByNpc = new Dictionary<string, List<TaskModel>>();
     private readonly Dictionary<string, List<TaskModel>> _receiverTasksByNpc = new Dictionary<string, List<TaskModel>>();
 
+    void Awake()
+    {
+        Instance = this;
+        if (GameState.Instance == null)
+        {
+            GameState.EnsureExists();
+        }
+    }
+
     void Start()
     {
-        Debug.Log("[TAM] Start: building NPC index");
+        Debug.Log("[TAM] Start: loading GameState and building NPC index");
+        if (GameState.Instance == null)
+        {
+            Debug.LogWarning("[TAM] GameState.Instance is null at Start()");
+        }
+        else
+        {
+            GameState.Instance.LoadState();
+        }
+
         SceneNpcRegistry.Instance.BuildIndex();
 
         var tasks = DataManager.LoadTasks();
@@ -22,10 +42,8 @@ public class TaskAssignmentManager : MonoBehaviour
         }
 
         Debug.Log($"[TAM] Loaded {tasks.Count} task(s) from DataManager");
-        // Разделяем задачи по ролям
         foreach (var t in tasks)
         {
-            // Защита: если поля GUID у тебя не string, приводим к строке безопасно
             string giverGuidStr = t.giverNpcGuid != null ? t.giverNpcGuid.ToString() : null;
             string receiverGuidStr = t.receiverNpcGuid != null ? t.receiverNpcGuid.ToString() : null;
 
@@ -38,7 +56,12 @@ public class TaskAssignmentManager : MonoBehaviour
                 AddToDictQueue(_receiverTasksByNpc, receiverGuidStr, t);
         }
 
-        // Обновим NPC: для каждого GUID, который есть в любой из двух словарей
+        var state = GameState.Instance?.GetData();
+        if (state != null)
+        {
+            ApplySavedQueuesAndCompletedTasks(state, tasks);
+        }
+
         var allGuids = new HashSet<string>();
         foreach (var k in _giverTasksByNpc.Keys) allGuids.Add(k);
         foreach (var k in _receiverTasksByNpc.Keys) allGuids.Add(k);
@@ -89,7 +112,6 @@ public class TaskAssignmentManager : MonoBehaviour
         return dict.TryGetValue(npcGuid, out var list) && list != null ? list.Count : 0;
     }
 
-    // Возвращает и удаляет первый элемент очереди для receiver (обычно ConfirmStartTask вызывает это)
     public TaskModel GetNextForReceiver(string receiverNpcGuid)
     {
         if (string.IsNullOrEmpty(receiverNpcGuid)) return null;
@@ -99,26 +121,23 @@ public class TaskAssignmentManager : MonoBehaviour
         rList.RemoveAt(0);
         Debug.Log($"[TAM] GetNextForReceiver: removed task {task.id} from receiver {receiverNpcGuid} (remainingReceiver={rList.Count})");
 
-        // Удаляем ту же задачу из очереди giver, если указан giverGuid
-        // Приводим giverGuid к строке безопасно
         string giverGuidStr = task.giverNpcGuid != null ? task.giverNpcGuid.ToString() : null;
         if (!string.IsNullOrEmpty(giverGuidStr))
         {
-            // task.id может быть int или string — используем object-совместимое сравнение
             bool removed = RemoveTaskFromGiverQueue(giverGuidStr, task.id);
             Debug.Log($"[TAM] RemoveTaskFromGiverQueue giver={giverGuidStr} task={task.id} removed={removed}");
         }
 
-        // Обновляем peek у receiver и у giver (если есть)
         UpdateNpcPeeks(receiverNpcGuid);
         if (!string.IsNullOrEmpty(giverGuidStr))
             UpdateNpcPeeks(giverGuidStr);
 
+        GameState.Instance?.MarkTaskStarted(task.id);
+        ExportQueuesToGameState();
+
         return task;
     }
 
-    // Теперь taskId имеет тип object-совместимый (используем dynamic-совместимость через object)
-    // Но лучше — привести к типу, который у тебя в TaskModel.id. Здесь предполагаем, что id — int или string.
     private bool RemoveTaskFromGiverQueue(string giverNpcGuid, object taskId)
     {
         if (string.IsNullOrEmpty(giverNpcGuid) || taskId == null) return false;
@@ -129,8 +148,6 @@ public class TaskAssignmentManager : MonoBehaviour
             var candidate = gList[i];
             if (candidate == null) continue;
 
-            // Сравниваем безопасно: если оба числа — сравниваем как int, иначе как string
-            // Попробуем привести оба к string и сравнить — это универсально и безопасно
             var candIdStr = candidate.id != null ? candidate.id.ToString() : null;
             var taskIdStr = taskId != null ? taskId.ToString() : null;
 
@@ -159,7 +176,6 @@ public class TaskAssignmentManager : MonoBehaviour
         Debug.Log($"[TAM] UpdateNpcPeeks: npc={npcGuid} giverPeek={giverPeek?.id} receiverPeek={receiverPeek?.id}");
     }
 
-    // Если нужен GetNext для giver — можно добавить аналогично
     public TaskModel GetNextForGiver(string npcGuid)
     {
         if (string.IsNullOrEmpty(npcGuid)) return null;
@@ -181,6 +197,8 @@ public class TaskAssignmentManager : MonoBehaviour
             }
         }
 
+        ExportQueuesToGameState();
+
         return t;
     }
 
@@ -192,5 +210,85 @@ public class TaskAssignmentManager : MonoBehaviour
     public bool HasGiverTasks(string npcGuid)
     {
         return !string.IsNullOrEmpty(npcGuid) && _giverTasksByNpc.TryGetValue(npcGuid, out var list) && list != null && list.Count > 0;
+    }
+
+    private void ApplySavedQueuesAndCompletedTasks(GameStateData state, List<TaskModel> allTasks)
+    {
+        if (state == null) return;
+
+        foreach (var doneId in state.completedTaskIds)
+        {
+            RemoveTaskFromAllQueuesById(doneId);
+        }
+
+        if (state.giverQueues != null && state.giverQueues.Count > 0)
+        {
+            _giverTasksByNpc.Clear();
+            foreach (var entry in state.giverQueues)
+            {
+                var list = new List<TaskModel>();
+                foreach (var tid in entry.taskIds)
+                {
+                    var t = allTasks.FirstOrDefault(x => x.id == tid);
+                    if (t != null) list.Add(t);
+                }
+                if (list.Count > 0) _giverTasksByNpc[entry.npcGuid] = list;
+            }
+        }
+
+        if (state.receiverQueues != null && state.receiverQueues.Count > 0)
+        {
+            _receiverTasksByNpc.Clear();
+            foreach (var entry in state.receiverQueues)
+            {
+                var list = new List<TaskModel>();
+                foreach (var tid in entry.taskIds)
+                {
+                    var t = allTasks.FirstOrDefault(x => x.id == tid);
+                    if (t != null) list.Add(t);
+                }
+                if (list.Count > 0) _receiverTasksByNpc[entry.npcGuid] = list;
+            }
+        }
+
+        Debug.Log("[TAM] Applied saved queues and removed completed tasks from in-memory queues.");
+    }
+
+    private void RemoveTaskFromAllQueuesById(int taskId)
+    {
+        foreach (var key in _giverTasksByNpc.Keys.ToList())
+        {
+            var list = _giverTasksByNpc[key];
+            list.RemoveAll(t => t != null && t.id == taskId);
+            if (list.Count == 0) _giverTasksByNpc.Remove(key);
+        }
+
+        foreach (var key in _receiverTasksByNpc.Keys.ToList())
+        {
+            var list = _receiverTasksByNpc[key];
+            list.RemoveAll(t => t != null && t.id == taskId);
+            if (list.Count == 0) _receiverTasksByNpc.Remove(key);
+        }
+    }
+
+    public void ExportQueuesToGameState()
+    {
+        if (GameState.Instance == null) return;
+        Debug.Log("[DEBUG] ExportQueuesToGameState: start");
+        var data = GameState.Instance.GetData();
+        data.giverQueues.Clear();
+        foreach (var kv in _giverTasksByNpc)
+        {
+            var entry = new GameStateData.NpcQueueEntry { npcGuid = kv.Key, taskIds = kv.Value.Select(t => t.id).ToList() };
+            data.giverQueues.Add(entry);
+        }
+        data.receiverQueues.Clear();
+        foreach (var kv in _receiverTasksByNpc)
+        {
+            var entry = new GameStateData.NpcQueueEntry { npcGuid = kv.Key, taskIds = kv.Value.Select(t => t.id).ToList() };
+            data.receiverQueues.Add(entry);
+        }
+        GameState.Instance.SaveState();
+        Debug.Log("[DEBUG] ExportQueuesToGameState: done, giverQueues=" + data.giverQueues.Count + " receiverQueues=" + data.receiverQueues.Count);
     }
 }
