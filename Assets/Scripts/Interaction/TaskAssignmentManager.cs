@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -10,6 +11,8 @@ public class TaskAssignmentManager : MonoBehaviour
 
     private readonly Dictionary<string, List<TaskModel>> _giverTasksByNpc = new Dictionary<string, List<TaskModel>>();
     private readonly Dictionary<string, List<TaskModel>> _receiverTasksByNpc = new Dictionary<string, List<TaskModel>>();
+
+    public static event Action<TaskModel> OnActiveQuestChanged;
 
     void Awake()
     {
@@ -44,8 +47,8 @@ public class TaskAssignmentManager : MonoBehaviour
         Debug.Log($"[TAM] Loaded {tasks.Count} task(s) from DataManager");
         foreach (var t in tasks)
         {
-            string giverGuidStr = t.giverNpcGuid != null ? t.giverNpcGuid.ToString() : null;
-            string receiverGuidStr = t.receiverNpcGuid != null ? t.receiverNpcGuid.ToString() : null;
+            string giverGuidStr = !string.IsNullOrEmpty(t.giverNpcGuid) ? t.giverNpcGuid : null;
+            string receiverGuidStr = !string.IsNullOrEmpty(t.receiverNpcGuid) ? t.receiverNpcGuid : null;
 
             Debug.Log($"[TAM] Task id={t.id} giver={giverGuidStr} receiver={receiverGuidStr} title={t.title}");
 
@@ -73,22 +76,30 @@ public class TaskAssignmentManager : MonoBehaviour
 
             Debug.Log($"[TAM] NPC guid={npcGuid} giverPeek={giverPeek?.id} receiverPeek={receiverPeek?.id}");
 
-            var npcObj = SceneNpcRegistry.Instance.FindByGuid(npcGuid);
-            if (npcObj == null)
+            var npcIdentity = SceneNpcRegistry.Instance.FindByGuid(npcGuid);
+            if (npcIdentity == null)
             {
                 Debug.LogWarning($"[TAM] SceneNpcRegistry: guid {npcGuid} not found in scene");
                 continue;
             }
-            var inter = npcObj.GetComponent<NPCInteractable>();
+
+            // »щем NPCInteractable устойчиво: self / parent / children
+            var inter = npcIdentity.GetComponent<NPCInteractable>()
+                        ?? npcIdentity.GetComponentInParent<NPCInteractable>()
+                        ?? npcIdentity.GetComponentInChildren<NPCInteractable>();
+
             if (inter == null)
             {
-                Debug.LogWarning($"[TAM] NPC {npcGuid} has no NPCInteractable component");
+                Debug.LogWarning($"[TAM] NPC {npcGuid} has no NPCInteractable component (checked self/parents/children)");
                 continue;
             }
 
             inter.SetAssignedTasks(peekForGiver: giverPeek, peekForReceiver: receiverPeek);
             Debug.Log($"[TAM] registered giverCount={GetCount(_giverTasksByNpc, npcGuid)} receiverCount={GetCount(_receiverTasksByNpc, npcGuid)} for NPC {npcGuid}");
         }
+
+        // ”ведомл€ем UI один раз о глобальном активном задании (не вызываем с null)
+        NotifyGlobalActiveQuestChanged();
     }
 
     private void AddToDictQueue(Dictionary<string, List<TaskModel>> dict, string npcGuid, TaskModel task)
@@ -121,13 +132,14 @@ public class TaskAssignmentManager : MonoBehaviour
         rList.RemoveAt(0);
         Debug.Log($"[TAM] GetNextForReceiver: removed task {task.id} from receiver {receiverNpcGuid} (remainingReceiver={rList.Count})");
 
-        string giverGuidStr = task.giverNpcGuid != null ? task.giverNpcGuid.ToString() : null;
+        string giverGuidStr = !string.IsNullOrEmpty(task.giverNpcGuid) ? task.giverNpcGuid : null;
         if (!string.IsNullOrEmpty(giverGuidStr))
         {
             bool removed = RemoveTaskFromGiverQueue(giverGuidStr, task.id);
             Debug.Log($"[TAM] RemoveTaskFromGiverQueue giver={giverGuidStr} task={task.id} removed={removed}");
         }
 
+        // ќбновл€ем peeks и уведомл€ем UI только если есть активное задание
         UpdateNpcPeeks(receiverNpcGuid);
         if (!string.IsNullOrEmpty(giverGuidStr))
             UpdateNpcPeeks(giverGuidStr);
@@ -148,8 +160,8 @@ public class TaskAssignmentManager : MonoBehaviour
             var candidate = gList[i];
             if (candidate == null) continue;
 
-            var candIdStr = candidate.id != null ? candidate.id.ToString() : null;
-            var taskIdStr = taskId != null ? taskId.ToString() : null;
+            var candIdStr = candidate.id.ToString();
+            var taskIdStr = taskId.ToString();
 
             if (!string.IsNullOrEmpty(candIdStr) && candIdStr == taskIdStr)
             {
@@ -167,12 +179,20 @@ public class TaskAssignmentManager : MonoBehaviour
         var giverPeek = PeekFromDict(_giverTasksByNpc, npcGuid);
         var receiverPeek = PeekFromDict(_receiverTasksByNpc, npcGuid);
 
-        var npcObj = SceneNpcRegistry.Instance.FindByGuid(npcGuid);
-        if (npcObj == null) { Debug.LogWarning($"[TAM] UpdateNpcPeeks: npc {npcGuid} not found"); return; }
-        var inter = npcObj.GetComponent<NPCInteractable>();
+        var npcIdentity = SceneNpcRegistry.Instance.FindByGuid(npcGuid);
+        if (npcIdentity == null) { Debug.LogWarning($"[TAM] UpdateNpcPeeks: npc {npcGuid} not found"); return; }
+
+        var inter = npcIdentity.GetComponent<NPCInteractable>()
+                    ?? npcIdentity.GetComponentInParent<NPCInteractable>()
+                    ?? npcIdentity.GetComponentInChildren<NPCInteractable>();
+
         if (inter == null) { Debug.LogWarning($"[TAM] UpdateNpcPeeks: NPCInteractable missing on {npcGuid}"); return; }
 
         inter.SetAssignedTasks(peekForGiver: giverPeek, peekForReceiver: receiverPeek);
+
+        var active = receiverPeek ?? giverPeek;
+        if (active != null) SafeInvokeActiveQuestChanged(active);
+
         Debug.Log($"[TAM] UpdateNpcPeeks: npc={npcGuid} giverPeek={giverPeek?.id} receiverPeek={receiverPeek?.id}");
     }
 
@@ -184,15 +204,22 @@ public class TaskAssignmentManager : MonoBehaviour
         list.RemoveAt(0);
         Debug.Log($"[TAM] GetNextForGiver: removed task {t.id} from giver {npcGuid} (remaining={list.Count})");
 
-        var npcObj = SceneNpcRegistry.Instance.FindByGuid(npcGuid);
-        if (npcObj != null)
+        var npcIdentity = SceneNpcRegistry.Instance.FindByGuid(npcGuid);
+        if (npcIdentity != null)
         {
-            var inter = npcObj.GetComponent<NPCInteractable>();
+            var inter = npcIdentity.GetComponent<NPCInteractable>()
+                        ?? npcIdentity.GetComponentInParent<NPCInteractable>()
+                        ?? npcIdentity.GetComponentInChildren<NPCInteractable>();
+
             if (inter != null)
             {
                 var newGiverPeek = PeekFromDict(_giverTasksByNpc, npcGuid);
                 var newReceiverPeek = PeekFromDict(_receiverTasksByNpc, npcGuid);
                 inter.SetAssignedTasks(peekForGiver: newGiverPeek, peekForReceiver: newReceiverPeek);
+
+                var active = newReceiverPeek ?? newGiverPeek;
+                if (active != null) SafeInvokeActiveQuestChanged(active);
+
                 Debug.Log($"[TAM] Updated NPC {npcGuid} peek -> giver:{newGiverPeek?.id} receiver:{newReceiverPeek?.id}");
             }
         }
@@ -290,5 +317,59 @@ public class TaskAssignmentManager : MonoBehaviour
         }
         GameState.Instance.SaveState();
         Debug.Log("[DEBUG] ExportQueuesToGameState: done, giverQueues=" + data.giverQueues.Count + " receiverQueues=" + data.receiverQueues.Count);
+    }
+
+    // ----- Helpers for safe notifications -----
+    private void NotifyGlobalActiveQuestChanged()
+    {
+        // find first receiver peek, then giver peek
+        foreach (var kv in _receiverTasksByNpc)
+        {
+            var t = PeekFromDict(_receiverTasksByNpc, kv.Key);
+            if (t != null)
+            {
+                SafeInvokeActiveQuestChanged(t);
+                return;
+            }
+        }
+        foreach (var kv in _giverTasksByNpc)
+        {
+            var t = PeekFromDict(_giverTasksByNpc, kv.Key);
+            if (t != null)
+            {
+                SafeInvokeActiveQuestChanged(t);
+                return;
+            }
+        }
+        // nothing active Ч do not invoke with null to avoid hiding UI unexpectedly
+    }
+
+    private void SafeInvokeActiveQuestChanged(TaskModel active)
+    {
+        if (active == null) return;
+        try
+        {
+            OnActiveQuestChanged?.Invoke(active);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[TAM] Exception while invoking OnActiveQuestChanged: {ex}");
+        }
+    }
+
+    // Optional helper for QuestPanel to query current active task
+    public TaskModel GetGlobalActiveTask()
+    {
+        foreach (var kv in _receiverTasksByNpc)
+        {
+            var t = PeekFromDict(_receiverTasksByNpc, kv.Key);
+            if (t != null) return t;
+        }
+        foreach (var kv in _giverTasksByNpc)
+        {
+            var t = PeekFromDict(_giverTasksByNpc, kv.Key);
+            if (t != null) return t;
+        }
+        return null;
     }
 }

@@ -28,37 +28,13 @@ public class PlayerInteract : MonoBehaviour
     private void TryInteract()
     {
         // если есть ховернутый NPC и в пределах interactRange Ч интерактим его
-        if (currentHoveredNpc != null)
-        {
-            float d = Vector3.Distance(transform.position, currentHoveredNpc.transform.position);
-            if (d <= interactRange)
-            {
-                currentHoveredNpc.Interact();
-                return;
-            }
-        }
+        if (currentHoveredNpc == null) return;
 
         // »наче ищем ближайшего NPC в радиусе как запасной вариант
-        Collider[] colliderArray = Physics.OverlapSphere(transform.position, interactRange);
-        NPCInteractable nearest = null;
-        float minDist = float.MaxValue;
-        foreach (Collider c in colliderArray)
-        {
-            if (c.TryGetComponent<NPCInteractable>(out var npc))
-            {
-                float dist = Vector3.Distance(transform.position, c.transform.position);
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    nearest = npc;
-                }
-            }
-        }
+        float d = Vector3.Distance(transform.position, currentHoveredNpc.transform.position);
+        if (d > interactRange) return;
 
-        if (nearest != null)
-        {
-            nearest.Interact();
-        }
+        currentHoveredNpc.Interact();
     }
 
     private void UpdateHover()
