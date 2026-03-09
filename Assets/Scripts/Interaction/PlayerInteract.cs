@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerInteract : MonoBehaviour
 {
     [Header("Interaction")]
-    public float interactRange = 2f;
+    public float interactRange = 3f;
 
     [Header("Hover (outline)")]
     public float hoverRange = 3f;
@@ -14,6 +14,7 @@ public class PlayerInteract : MonoBehaviour
     // runtime
     private NPCInteractable currentHoveredNpc;
     private Outline currentOutline;
+    private Collider currentHoveredCollider;
 
     void Update()
     {
@@ -27,12 +28,17 @@ public class PlayerInteract : MonoBehaviour
 
     private void TryInteract()
     {
-        // если есть ховернутый NPC и в пределах interactRange Ч интерактим его
-        if (currentHoveredNpc == null) return;
+        if (currentHoveredNpc == null || currentHoveredCollider == null)
+            return;
 
-        // »наче ищем ближайшего NPC в радиусе как запасной вариант
-        float d = Vector3.Distance(transform.position, currentHoveredNpc.transform.position);
-        if (d > interactRange) return;
+        var cameraTransform = Camera.main != null ? Camera.main.transform : transform;
+        Vector3 distanceFrom = cameraTransform.position;
+        Vector3 closestPoint = currentHoveredCollider.ClosestPoint(distanceFrom);
+
+        // Distance to collider surface is more stable than transform-to-transform distance.
+        float distance = Vector3.Distance(distanceFrom, closestPoint);
+        if (distance > interactRange)
+            return;
 
         currentHoveredNpc.Interact();
     }
@@ -48,7 +54,7 @@ public class PlayerInteract : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, hoverRange, hoverMask))
         {
-            var npc = hit.collider.GetComponentInParent<NPCInteractable>();
+            var npc = ResolveNpcInteractable(hit.collider);
             if (npc != null)
             {
                 if (npc != currentHoveredNpc)
@@ -56,10 +62,17 @@ public class PlayerInteract : MonoBehaviour
                     ClearCurrentOutline();
 
                     currentHoveredNpc = npc;
-                    currentOutline = currentHoveredNpc.GetComponent<Outline>();
+                    currentHoveredCollider = hit.collider;
+                    currentOutline = currentHoveredNpc.GetComponent<Outline>()
+                                     ?? currentHoveredNpc.GetComponentInChildren<Outline>()
+                                     ?? currentHoveredNpc.GetComponentInParent<Outline>();
                     if (currentOutline != null)
                     {
                         currentOutline.enabled = true;
+                    }
+                    else
+                    {
+                        currentHoveredCollider = hit.collider;
                     }
                 }
 
@@ -78,7 +91,19 @@ public class PlayerInteract : MonoBehaviour
             currentOutline.enabled = false;
             currentOutline = null;
         }
+
+        currentHoveredCollider = null;
         currentHoveredNpc = null;
+    }
+
+    private static NPCInteractable ResolveNpcInteractable(Collider hitCollider)
+    {
+        if (hitCollider == null)
+            return null;
+
+        return hitCollider.GetComponent<NPCInteractable>()
+               ?? hitCollider.GetComponentInParent<NPCInteractable>()
+               ?? hitCollider.GetComponentInChildren<NPCInteractable>();
     }
 
     // ќпционально: дл€ визуальной отладки

@@ -10869,7 +10869,6 @@ GameObject:
   - component: {fileID: 632987143}
   - component: {fileID: 632987145}
   - component: {fileID: 632987144}
-  - component: {fileID: 632987146}
   m_Layer: 5
   m_Name: QuestPanel
   m_TagString: Untagged
@@ -10937,21 +10936,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 632987142}
   m_CullTransparentMesh: 1
---- !u!114 &632987146
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 632987142}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 513cdd345fed5a548a869e56a5c2038f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::QuestPanelController
-  panelRoot: {fileID: 632987142}
-  titleText: {fileID: 135733239}
-  descriptionText: {fileID: 225339747}
 --- !u!1001 &643040369
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18112,7 +18096,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1039420858
 RectTransform:
   m_ObjectHideFlags: 0
@@ -32566,7 +32550,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 0.69
 --- !u!222 &1923975826
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -36801,7 +36785,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 8224180226836437113, guid: ef3f81015cc5b974e9541d4770e2a2cb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -881.0572
+      value: -880.46
       objectReference: {fileID: 0}
     - target: {fileID: 8224180226836437113, guid: ef3f81015cc5b974e9541d4770e2a2cb, type: 3}
       propertyPath: m_LocalPosition.y
