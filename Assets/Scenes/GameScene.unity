@@ -2516,7 +2516,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1.5, y: 173.62048}
+  m_AnchoredPosition: {x: 1.5, y: 78.90869}
   m_SizeDelta: {x: 323, y: 38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &135733239
@@ -3745,8 +3745,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1.5, y: -24.5}
-  m_SizeDelta: {x: 323, y: 329}
+  m_AnchoredPosition: {x: 1.5, y: -43.5}
+  m_SizeDelta: {x: 323, y: 177}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &225339747
 MonoBehaviour:
@@ -10869,6 +10869,7 @@ GameObject:
   - component: {fileID: 632987143}
   - component: {fileID: 632987145}
   - component: {fileID: 632987144}
+  - component: {fileID: 632987146}
   m_Layer: 5
   m_Name: QuestPanel
   m_TagString: Untagged
@@ -10895,8 +10896,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -782.5, y: 333.99994}
-  m_SizeDelta: {x: -1565, y: -668.0001}
+  m_AnchoredPosition: {x: -782.5, y: 429.99994}
+  m_SizeDelta: {x: -1565, y: -860.0001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &632987144
 MonoBehaviour:
@@ -10936,6 +10937,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 632987142}
   m_CullTransparentMesh: 1
+--- !u!114 &632987146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632987142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d4e506f019beef49a17ecd236747bf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestPanelController
+  panelRoot: {fileID: 632987142}
+  questTitleText: {fileID: 135733239}
+  questDescriptionText: {fileID: 225339747}
+  noQuestTitle: "\u041D\u0435\u0442 \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0433\u043E
+    \u0437\u0430\u0434\u0430\u043D\u0438\u044F"
+  noQuestDescription: "\u041D\u0430 \u0434\u0430\u043D\u043D\u044B\u0439 \u043C\u043E\u043C\u0435\u043D\u0442
+    \u043A\u0432\u0435\u0441\u0442\u043E\u0432 \u0431\u043E\u043B\u044C\u0448\u0435
+    \u043D\u0435\u0442 :("
+  hideWhenNoQuest: 0
 --- !u!1001 &643040369
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15084,8 +15106,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0.000061035156}
-  m_SizeDelta: {x: 355, y: 412}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 355, y: 220}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &915423293
 MonoBehaviour:
@@ -22810,6 +22832,7 @@ GameObject:
   - component: {fileID: 1309901759}
   - component: {fileID: 1309901761}
   - component: {fileID: 1309901760}
+  - component: {fileID: 1309901762}
   m_Layer: 5
   m_Name: StarsPanel
   m_TagString: Untagged
@@ -22876,6 +22899,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1309901758}
   m_CullTransparentMesh: 1
+--- !u!114 &1309901762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1309901758}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88256df42180fc449a3a8e9b0cf46c10, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StarsPanelController
+  starsText: {fileID: 1707445863}
+  format: "\u2B50 {0}"
 --- !u!1 &1313912201 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 90d2b9df9a42a3743bd67bbdb0c7e931, type: 3}
@@ -27238,6 +27275,10 @@ PrefabInstance:
       propertyPath: rewardPanelPrefab
       value: 
       objectReference: {fileID: 3471977303204223312, guid: 5a5349b93fddb1e44bd57320200c95d9, type: 3}
+    - target: {fileID: 7919781881496637906, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
+      propertyPath: fastCompletionThresholdSeconds
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 8230268440257391080, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -32498,7 +32539,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1923975824
 RectTransform:
   m_ObjectHideFlags: 0

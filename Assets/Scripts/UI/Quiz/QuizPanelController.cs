@@ -18,10 +18,15 @@ public class QuizPanelController : MonoBehaviour
     [SerializeField] private QuizCardController quizCardPrefab;
     [SerializeField] private RewardPanelController rewardPanelPrefab;
 
+    [Header("Reward tuning")]
+    [SerializeField] private float fastCompletionThresholdSeconds = 20f;
+
+
     private readonly List<QuizCardController> _cards = new List<QuizCardController>();
     private QuizTask _task;
     private bool _isMulti;
     private NPCInteractable _sourceNpc;
+    private float _openedAtUnscaledTime;
 
     private void Awake()
     {
@@ -34,6 +39,7 @@ public class QuizPanelController : MonoBehaviour
     {
         _sourceNpc = sourceNpc;
         _task = task;
+        _openedAtUnscaledTime = Time.unscaledTime;
         gameObject.SetActive(true);
         StopAllCoroutines();
         StartCoroutine(ShowRoutine(task));
@@ -116,35 +122,64 @@ public class QuizPanelController : MonoBehaviour
         if (submitButton != null) submitButton.interactable = false;
         if (nextButton != null) nextButton.gameObject.SetActive(true);
 
-        if (isCorrect)
+        var gameState = GameState.Instance;
+        if (gameState == null)
         {
-            _sourceNpc?.ConfirmStartTask();
+            Debug.LogWarning("[Quiz] GameState.Instance is null. Reward/accounting logic is skipped.");
+            if (isCorrect) ClosePanel();
+            return;
+        }
+        if (!isCorrect)
+        {
+            gameState.RegisterFailedQuizAttempt(_task.taskId);
+            return;
+        }
 
-            if (_task != null)
-            {
-                GameState.Instance?.MarkTaskCompleted(_task.taskId);
-                Debug.Log($"[DEBUG] Marked completed task {_task.taskId}. Completed count={GameState.Instance.GetData().completedTaskIds.Count}");
-                TaskAssignmentManager.Instance?.ExportQueuesToGameState();
-            }
+        _sourceNpc?.ConfirmStartTask();
 
-            if (_task.hasStars && rewardPanelPrefab != null)
+        if (_task != null)
+        {
+            GameState.Instance.MarkTaskCompleted(_task.taskId);
+            Debug.Log($"[DEBUG] Marked completed task {_task.taskId}. Completed count={GameState.Instance.GetData().completedTaskIds.Count}");
+            TaskAssignmentManager.Instance?.ExportQueuesToGameState();
+        }
+
+        if (_task != null && _task.hasStars)
+        {
+            int failedAttempts = gameState.GetFailedQuizAttempts(_task.taskId);
+            float duration = Mathf.Max(0f, Time.unscaledTime - _openedAtUnscaledTime);
+            int starsAwarded = CalculateStarsForCompletion(failedAttempts, duration);
+            gameState.TryAwardTaskStars(_task.taskId, starsAwarded, failedAttempts);
+
+
+            if (rewardPanelPrefab != null)
             {
                 var reward = Instantiate(rewardPanelPrefab, transform.parent);
-                reward.Show("Задание выполнено!", CalculateStars(selected, correct));
+                reward.Show("Задание выполнено!", starsAwarded);
             }
             else
             {
                 ClosePanel();
             }
         }
+        else
+        {
+            gameState.ClearQuizProgress(_task.taskId);
+            ClosePanel();
+        }
     }
 
-    private int CalculateStars(List<int> selected, List<int> correct)
+    private int CalculateStarsForCompletion(int failedAttemptsBeforeSuccess, float completionSeconds)
     {
-        if (selected.SequenceEqual(correct)) return 3;
-        bool subset = selected.All(i => correct.Contains(i));
-        if (subset && selected.Count > 0) return 2;
-        return selected.Intersect(correct).Any() ? 1 : 0;
+        int safeFails = Mathf.Max(0, failedAttemptsBeforeSuccess);
+
+        if (safeFails >= 2)
+            return 1;
+
+        if (safeFails == 1)
+            return 2;
+
+        return completionSeconds <= fastCompletionThresholdSeconds ? 3 : 2;
     }
 
     private void HandleNext()
