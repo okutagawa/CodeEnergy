@@ -5931,16 +5931,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f98833b633f5c14686a074b728ba24a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
+  btnStartGame: {fileID: 2107472638}
   btnContinue: {fileID: 1546878076}
-  btnNewGame: {fileID: 2107472638}
+  btnSettings: {fileID: 1841594875}
   btnExit: {fileID: 1588781723}
   btnAdmin: {fileID: 238702893}
-  adminPasswordPanel: {fileID: 1582037609}
-  confirmNewGamePanel: {fileID: 0}
-  confirmNewGameYesBtn: {fileID: 0}
-  confirmNewGameNoBtn: {fileID: 0}
-  statusText: {fileID: 0}
-  gameStateFileName: gamestate.json
 --- !u!1 &1224178162
 GameObject:
   m_ObjectHideFlags: 0
