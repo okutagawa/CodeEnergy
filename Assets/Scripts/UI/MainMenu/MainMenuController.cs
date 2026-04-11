@@ -1,55 +1,99 @@
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
 {
-    public Button btnPlayer;
-    public Button btnAdmin;
+    [Header("Main menu buttons")]
+    public Button btnStartGame;
+    public Button btnContinue;
+    public Button btnSettings;
     public Button btnExit;
-    public GameObject adminPasswordPanel;
+
+    public Button btnAdmin;
+
+    private const string GameSceneName = "GameScene";
+    private const string GameStateFileName = "gamestate.json";
 
     private void Start()
     {
-        if (btnPlayer != null)
-        {
-            btnPlayer.onClick.RemoveAllListeners();
-            btnPlayer.onClick.AddListener(OnPlayerClicked);
-        }
+        BindButton(btnStartGame, OnStartGameClicked);
+        BindButton(btnContinue, OnContinueClicked);
+        BindButton(btnSettings, OnSettingsClicked);
+        BindButton(btnExit, OnExitClicked);
+        BindButton(btnAdmin, OnAdminClicked);
 
-        if (btnAdmin != null)
-        {
-            btnAdmin.onClick.RemoveAllListeners();
-            btnAdmin.onClick.AddListener(OnAdminClicked);
-        }
-
-        if (btnExit != null)
-        {
-            btnExit.onClick.RemoveAllListeners();
-            btnExit.onClick.AddListener(OnExitClicked);
-        }
+        RefreshContinueButtonState();
     }
 
-    private void OnPlayerClicked()
+    private static void BindButton(Button button, UnityEngine.Events.UnityAction action)
     {
-        SceneManager.LoadScene("GameScene");
+        if (button == null) return;
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(action);
     }
 
-    private void OnAdminClicked()
+    public void OnStartGameClicked()
+    {
+        SaveManager.Delete();
+
+        if (GameState.Instance != null)
+        {
+            GameState.Instance.ApplyData(new GameStateData());
+            GameState.Instance.IsAdminMode = false;
+        }
+
+        SceneManager.LoadScene(GameSceneName);
+    }
+
+    public void OnContinueClicked()
+    {
+        if (!HasSaveFile())
+        {
+            Debug.LogWarning("[MainMenu] Continue pressed, but save file was not found.");
+            RefreshContinueButtonState();
+            return;
+        }
+
+        if (GameState.Instance != null)
+        {
+            GameState.Instance.LoadState();
+            GameState.Instance.IsAdminMode = false;
+        }
+
+        SceneManager.LoadScene(GameSceneName);
+    }
+
+    public void OnSettingsClicked()
+    {
+        Debug.Log("[MainMenu] Settings button clicked.");
+    }
+
+    public void OnAdminClicked()
     {
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowAdminPassword();
+            return;
         }
-        else if (adminPasswordPanel != null)
-        {
-            adminPasswordPanel.SetActive(true);
-            gameObject.SetActive(false);
-        }
+        Debug.LogWarning("[MainMenu] UIManager.Instance is null. Cannot open admin password panel.");
     }
 
-    private void OnExitClicked()
+    public void OnExitClicked()
     {
         Application.Quit();
+    }
+
+    private void RefreshContinueButtonState()
+    {
+        if (btnContinue != null)
+            btnContinue.interactable = HasSaveFile();
+    }
+
+    private bool HasSaveFile()
+    {
+        var filePath = Path.Combine(Application.persistentDataPath, GameStateFileName);
+        return File.Exists(filePath);
     }
 }
