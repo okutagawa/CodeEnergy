@@ -21,9 +21,17 @@ public class CourseListManager : MonoBehaviour
 
     void Start()
     {
-        if (buttonAddCourse != null) { buttonAddCourse.onClick.RemoveAllListeners(); buttonAddCourse.onClick.AddListener(OnAddCourseClicked); }
+        if (buttonAddCourse != null) 
+        { 
+            buttonAddCourse.onClick.RemoveAllListeners(); 
+            buttonAddCourse.onClick.AddListener(OnAddCourseClicked); 
+        }
         if (buttonDeleteSelected != null) buttonDeleteSelected.onClick.AddListener(DeleteSelectedCourse);
-        if (buttonExit != null) { buttonExit.onClick.RemoveAllListeners(); buttonExit.onClick.AddListener(OnExitClicked); }
+        if (buttonExit != null) 
+        { 
+            buttonExit.onClick.RemoveAllListeners(); 
+            buttonExit.onClick.AddListener(OnExitClicked); 
+        }
 
         container = DataManager.LoadCourses();
         RefreshUI();
@@ -112,11 +120,11 @@ public class CourseListManager : MonoBehaviour
     {
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.ReturnToRoleSelection();
+            UIManager.Instance.ReturnToMainMenu();
         }
         else
         {
-            Debug.LogWarning("CourseListManager: UIManager.Instance is null when trying to return to role selection");
+            Debug.LogWarning("CourseListManager: UIManager.Instance is null when trying to return to main menu");
         }
     }
 }

@@ -3889,7 +3889,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9739cc16c99fc37449aef94230b63eda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainMenuRoot: {fileID: 1211577709}
+  roleSelectionPanel: {fileID: 1669109427}
   adminPasswordPanel: {fileID: 1582037609}
   coursesPanel: {fileID: 2122064799}
   tasksPanel: {fileID: 294007068}
@@ -5848,7 +5848,6 @@ GameObject:
   - component: {fileID: 1211577710}
   - component: {fileID: 1211577712}
   - component: {fileID: 1211577711}
-  - component: {fileID: 1211577713}
   m_Layer: 5
   m_Name: MainMenuRoot
   m_TagString: Untagged
@@ -5919,28 +5918,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1211577709}
   m_CullTransparentMesh: 1
---- !u!114 &1211577713
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1211577709}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f98833b633f5c14686a074b728ba24a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
-  btnContinue: {fileID: 1546878076}
-  btnNewGame: {fileID: 2107472638}
-  btnExit: {fileID: 1588781723}
-  btnAdmin: {fileID: 238702893}
-  adminPasswordPanel: {fileID: 1582037609}
-  confirmNewGamePanel: {fileID: 0}
-  confirmNewGameYesBtn: {fileID: 0}
-  confirmNewGameNoBtn: {fileID: 0}
-  statusText: {fileID: 0}
-  gameStateFileName: gamestate.json
 --- !u!1 &1224178162
 GameObject:
   m_ObjectHideFlags: 0
@@ -7622,7 +7599,7 @@ MonoBehaviour:
   confirmBtn: {fileID: 820071464}
   cancelBtn: {fileID: 849643856}
   attemptsText: {fileID: 2078664748}
-  mainMenuRoot: {fileID: 1211577709}
+  roleSelectionPanel: {fileID: 1669109427}
   expectedPassword: admin
   maxAttempts: 3
 --- !u!1 &1588781721

@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class UIManager : MonoBehaviour
@@ -6,7 +5,7 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance { get; private set; }
 
     [Header("Main panels (assign in inspector)")]
-    public GameObject roleSelectionPanel;
+    public GameObject mainMenuRoot;
     public GameObject adminPasswordPanel;
     public GameObject coursesPanel;
     public GameObject tasksPanel;
@@ -20,14 +19,18 @@ public class UIManager : MonoBehaviour
     private TasksListManager _tasksListManager;
 
 
-    void Awake()
+    private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
-    void Start()
+    private void Start()
     {
         Debug.Log("persistentDataPath = " + Application.persistentDataPath);
         CacheManagers();
@@ -54,9 +57,14 @@ public class UIManager : MonoBehaviour
     public void ShowOnly(GameObject panel)
     {
         // Список всех известных панелей — расширяйте по необходимости
-        var all = new GameObject[] {
-            roleSelectionPanel, adminPasswordPanel,
-            coursesPanel, tasksPanel, taskEditorPanel, editCoursePanel
+        var all = new GameObject[]
+        {
+            mainMenuRoot,
+            adminPasswordPanel,
+            coursesPanel,
+            tasksPanel,
+            taskEditorPanel,
+            editCoursePanel
         };
 
         foreach (var p in all)
@@ -70,14 +78,14 @@ public class UIManager : MonoBehaviour
     }
 
     // Простые обёртки для удобства вызова из других контроллеров
-    public void ShowRoleSelection()
+    public void ShowMainMenu()
     {
-        ShowOnly(roleSelectionPanel ?? roleSelectionPanel);
+        ShowOnly(mainMenuRoot);
     }
 
     public void ShowAdminPassword()
     {
-        ShowOnly(adminPasswordPanel ?? adminPasswordPanel);
+        ShowOnly(adminPasswordPanel);
     }
 
     public void ShowCoursesPanel()
@@ -85,11 +93,7 @@ public class UIManager : MonoBehaviour
         ShowOnly(coursesPanel);
         // Обновить список курсов при показе
         if (_courseListManager == null) CacheManagers();
-        if (_courseListManager != null)
-        {
-            // гарантируем, что CourseListManager обновит UI из сохранённых данных
-            try { _courseListManager.RefreshUI(); } catch { /* если метод private, то можно вызвать через Start/Enable */ }
-        }
+        _courseListManager?.RefreshUI();
     }
 
     // Основной метод для перехода к TasksPanel и передачи контекста courseId
@@ -109,20 +113,18 @@ public class UIManager : MonoBehaviour
         if (_tasksListManager != null)
         {
             _tasksListManager.OpenForCourse(courseId);
+            return;
+        }
+
+        var found = FindObjectOfType<TasksListManager>();
+        if (found != null)
+        {
+            _tasksListManager = found;
+            _tasksListManager.OpenForCourse(courseId);
         }
         else
         {
-            // fallback: ищем в сцене
-            var found = FindObjectOfType<TasksListManager>();
-            if (found != null)
-            {
-                _tasksListManager = found;
-                _tasksListManager.OpenForCourse(courseId);
-            }
-            else
-            {
-                Debug.LogError("UIManager: TasksListManager not found in scene");
-            }
+            Debug.LogError("UIManager: TasksListManager not found in scene");
         }
     }
 
@@ -134,9 +136,9 @@ public class UIManager : MonoBehaviour
     }
 
     // Возврат к выбору ролей (для крестика/Exit)
-    public void ReturnToRoleSelection()
+    public void ReturnToMainMenu()
     {
-        ShowOnly(roleSelectionPanel);
+        ShowOnly(mainMenuRoot);
     }
 
     // Простая утилита для безопасного обращения к CourseListManager (если метод RefreshUI доступен)

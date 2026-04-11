@@ -8,7 +8,7 @@ public class AdminPasswordController : MonoBehaviour
     public Button confirmBtn;
     public Button cancelBtn;
     public Text attemptsText;
-    public GameObject roleSelectionPanel;
+    public GameObject mainMenuRoot;
 
     [Header("Settings")]
     public string expectedPassword = "admin";
@@ -16,26 +16,42 @@ public class AdminPasswordController : MonoBehaviour
 
     private int _attemptsLeft;
 
-    void Awake() => _attemptsLeft = maxAttempts;
-
-    void Start()
+    private void Awake()
     {
-        if (confirmBtn != null) { confirmBtn.onClick.RemoveAllListeners(); confirmBtn.onClick.AddListener(OnConfirm); }
-        if (cancelBtn != null) { cancelBtn.onClick.RemoveAllListeners(); cancelBtn.onClick.AddListener(OnCancel); }
+        _attemptsLeft = maxAttempts;
+    }
+
+    private void Start()
+    {
+        if (confirmBtn != null)
+        {
+            confirmBtn.onClick.RemoveAllListeners();
+            confirmBtn.onClick.AddListener(OnConfirm);
+        }
+
+        if (cancelBtn != null)
+        {
+            cancelBtn.onClick.RemoveAllListeners();
+            cancelBtn.onClick.AddListener(OnCancel);
+        }
         UpdateAttemptsText();
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         if (passwordInput != null) passwordInput.text = "";
         UpdateAttemptsText();
     }
 
-    void OnConfirm()
+    private void OnConfirm()
     {
-        if (passwordInput == null) { Debug.LogError("AdminPasswordController: passwordInput not assigned"); return; }
+        if (passwordInput == null)
+        {
+            Debug.LogError("AdminPasswordController: passwordInput not assigned");
+            return;
+        }
 
-        string entered = passwordInput.text ?? "";
+        var entered = passwordInput.text ?? string.Empty;
         if (entered == expectedPassword)
         {
             if (GameState.Instance != null) GameState.Instance.IsAdminMode = true;
@@ -43,31 +59,40 @@ public class AdminPasswordController : MonoBehaviour
             UpdateAttemptsText();
 
             if (UIManager.Instance != null) UIManager.Instance.OnAdminAuthenticated();
-            else
-            {
-                if (roleSelectionPanel != null) roleSelectionPanel.SetActive(false);
-            }
+            else gameObject.SetActive(false);
             return;
         }
 
         _attemptsLeft--;
         UpdateAttemptsText();
 
-        if (_attemptsLeft <= 0) { Debug.LogWarning("AdminPasswordController: attempts exhausted"); Application.Quit(); return; }
+        if (_attemptsLeft <= 0)
+        {
+            Debug.LogWarning("AdminPasswordController: attempts exhausted");
+            Application.Quit();
+            return;
+        }
 
         passwordInput.text = "";
         passwordInput.Select();
         passwordInput.ActivateInputField();
     }
 
-    void OnCancel()
+    private void OnCancel()
     {
-        if (UIManager.Instance != null && roleSelectionPanel != null) UIManager.Instance.ShowOnly(roleSelectionPanel);
-        else if (roleSelectionPanel != null) { roleSelectionPanel.SetActive(true); gameObject.SetActive(false); }
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowMainMenu();
+        }
+        else if (mainMenuRoot != null)
+        {
+            mainMenuRoot.SetActive(true);
+            gameObject.SetActive(false);
+        }
     }
 
-    void UpdateAttemptsText()
+    private void UpdateAttemptsText()
     {
-        if (attemptsText != null) attemptsText.text = $"Осталось попыток: {_attemptsLeft}";
+        if (attemptsText != null) attemptsText.text = $"Attempts left: {_attemptsLeft}";
     }
 }
