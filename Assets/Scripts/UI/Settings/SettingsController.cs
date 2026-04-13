@@ -208,6 +208,12 @@ public class SettingsController : MonoBehaviour
 
     public void CloseSettings()
     {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.HideSettingsPanel();
+            return;
+        }
+
         if (settingsPanelRoot != null)
         {
             settingsPanelRoot.SetActive(false);

@@ -87,14 +87,25 @@ public class UIManager : MonoBehaviour
 
     public void ShowAdminPassword()
     {
-        ShowOnly(adminPasswordPanel);
+        if (mainMenuRoot != null)
+            mainMenuRoot.SetActive(true);
+
+        if (adminPasswordPanel != null)
+        {
+            adminPasswordPanel.SetActive(true);
+            adminPasswordPanel.transform.SetAsLastSibling();
+        }
     }
 
     public void ShowSettingsPanel()
     {
         if (settingsPanel != null)
         {
-            ShowOnly(settingsPanel);
+            if (mainMenuRoot != null)
+                mainMenuRoot.SetActive(true);
+
+            settingsPanel.SetActive(true);
+            settingsPanel.transform.SetAsLastSibling();
             return;
         }
 
@@ -106,6 +117,18 @@ public class UIManager : MonoBehaviour
         }
 
         Debug.LogWarning("UIManager: settingsPanel is not assigned and SettingsController was not found.");
+    }
+
+    public void HideAdminPassword()
+    {
+        if (adminPasswordPanel != null)
+            adminPasswordPanel.SetActive(false);
+    }
+
+    public void HideSettingsPanel()
+    {
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
     }
 
     public void ShowCoursesPanel()

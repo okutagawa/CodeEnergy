@@ -82,7 +82,7 @@ public class AdminPasswordController : MonoBehaviour
     {
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.ShowMainMenu();
+            UIManager.Instance.HideAdminPassword();
         }
         else if (mainMenuRoot != null)
         {
