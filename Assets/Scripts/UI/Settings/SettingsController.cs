@@ -7,14 +7,14 @@ using UnityEngine.UI;
 public class SettingsController : MonoBehaviour
 {
     [Header("Display")]
-    [SerializeField] public Dropdown resolutionDropdown;
+    [SerializeField] private Dropdown resolutionDropdown;
     [SerializeField] private Toggle fullscreenToggle;
 
     [Header("Audio")]
-    [SerializeField] public Slider masterVolume;
-    [SerializeField] public Slider musicVolume;
-    [SerializeField] public Slider sfxVolume;
-    [SerializeField] public AudioMixer mainAudioMixer;
+    [SerializeField] private Slider masterVolume;
+    [SerializeField] private Slider musicVolume;
+    [SerializeField] private Slider sfxVolume;
+    [SerializeField] private AudioMixer mainAudioMixer;
 
     [Header("Buttons")]
     [SerializeField] private Button btnSave;
@@ -55,14 +55,12 @@ public class SettingsController : MonoBehaviour
 
         for (var i = 0; i < resolutions.Length; i++)
         {
-            // Используем refreshRate (целое число), формируем читаемую строку
-            var option = $"{resolutions[i].width}x{resolutions[i].height} {resolutions[i].refreshRate}Hz";
+            var option = $"{resolutions[i].width}x{resolutions[i].height} {resolutions[i].refreshRateRatio.value:0.##}Hz";
             options.Add(option);
 
-            // Сравниваем с текущим экраном по ширине/высоте/частоте
             if (resolutions[i].width == Screen.currentResolution.width &&
                 resolutions[i].height == Screen.currentResolution.height &&
-                resolutions[i].refreshRate == Screen.currentResolution.refreshRate)
+                Mathf.Approximately((float)resolutions[i].refreshRateRatio.value, (float)Screen.currentResolution.refreshRateRatio.value))
             {
                 currentResolutionIndex = i;
             }
@@ -122,9 +120,6 @@ public class SettingsController : MonoBehaviour
 
     public void SetFullscreen(bool isFullscreen)
     {
-        // Устанавливаем fullscreen через FullScreenMode: оставляем текущий режим, но меняем флаг fullScreen
-        // В Unity есть несколько режимов FullScreenMode; здесь используем FullScreenMode.FullScreenWindow при true, иначе Windowed
-        Screen.fullScreenMode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
         Screen.fullScreen = isFullscreen;
     }
 
@@ -135,10 +130,7 @@ public class SettingsController : MonoBehaviour
 
         resolutionIndex = Mathf.Clamp(resolutionIndex, 0, resolutions.Length - 1);
         var resolution = resolutions[resolutionIndex];
-
-        // Используем перегрузку с FullScreenMode и refreshRate (int)
-        // Передаём текущий fullScreenMode, чтобы не менять тип полноэкранного режима
-        Screen.SetResolution(resolution.width, resolution.height, Screen.fullScreenMode, resolution.refreshRate);
+        Screen.SetResolution(resolution.width, resolution.height, Screen.fullScreen);
     }
 
     public void SaveSettings()
@@ -169,15 +161,11 @@ public class SettingsController : MonoBehaviour
                 PlayerPrefs.GetInt(FullscreenPreferenceKey, Convert.ToInt32(Screen.fullScreen))
             );
             fullscreenToggle.SetIsOnWithoutNotify(isFullscreen);
-
-            // Устанавливаем fullscreen корректно через FullScreenMode
-            Screen.fullScreenMode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
             Screen.fullScreen = isFullscreen;
         }
 
         if (resolutionDropdown != null)
         {
-            // При загрузке выставляем разрешение, используя текущее значение дропдауна (инициализировано в InitializeResolutions)
             SetResolution(resolutionDropdown.value);
         }
 
@@ -205,25 +193,18 @@ public class SettingsController : MonoBehaviour
 
     public void ChangeMasterVolume(float value)
     {
-        mainAudioMixer.SetFloat("MasterVol", masterVolume.value);
+        ApplyMixerVolume(MixerMasterParameter, value);
     }
 
     public void ChangeMusicVolume(float value)
     {
-        mainAudioMixer.SetFloat("MusicVol", musicVolume.value);
+        ApplyMixerVolume(MixerMusicParameter, value);
     }
 
     public void ChangeSfxVolume(float value)
     {
-        mainAudioMixer.SetFloat("SFXVol", sfxVolume.value);
+        ApplyMixerVolume(MixerSfxParameter, value);
     }
-
-    //private float LinearToDb(float linear)
-    //{
-    //    // Ожидаем, что слайдер даёт 0..1; конвертируем в dB для AudioMixer
-    //    if (linear <= 0.0001f) return -80f;
-    //    return 20f * Mathf.Log10(Mathf.Clamp(linear, 0.0001f, 1f));
-    //}
 
     public void CloseSettings()
     {
@@ -234,5 +215,30 @@ public class SettingsController : MonoBehaviour
         }
 
         gameObject.SetActive(false);
+    }
+
+    public void OpenSettings()
+    {
+        if (settingsPanelRoot != null)
+        {
+            settingsPanelRoot.SetActive(true);
+            return;
+        }
+
+        gameObject.SetActive(true);
+    }
+
+    private void ApplyMixerVolume(string mixerParameter, float normalizedVolume)
+    {
+        if (mainAudioMixer == null)
+            return;
+
+        mainAudioMixer.SetFloat(mixerParameter, LinearToDb(normalizedVolume));
+    }
+
+    private static float LinearToDb(float linear)
+    {
+        linear = Mathf.Clamp(linear, 0.0001f, 1f);
+        return 20f * Mathf.Log10(linear);
     }
 }

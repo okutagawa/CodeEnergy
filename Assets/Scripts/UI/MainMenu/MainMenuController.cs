@@ -68,6 +68,21 @@ public class MainMenuController : MonoBehaviour
     public void OnSettingsClicked()
     {
         Debug.Log("[MainMenu] Settings button clicked.");
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowSettingsPanel();
+            return;
+        }
+
+        var settingsController = FindObjectOfType<SettingsController>(true);
+        if (settingsController != null)
+        {
+            settingsController.OpenSettings();
+            return;
+        }
+
+        Debug.LogWarning("[MainMenu] Settings panel/controller not found in scene.");
     }
 
     public void OnAdminClicked()

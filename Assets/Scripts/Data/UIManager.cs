@@ -7,6 +7,7 @@ public class UIManager : MonoBehaviour
     [Header("Main panels (assign in inspector)")]
     public GameObject mainMenuRoot;
     public GameObject adminPasswordPanel;
+    public GameObject settingsPanel;
     public GameObject coursesPanel;
     public GameObject tasksPanel;
 
@@ -61,6 +62,7 @@ public class UIManager : MonoBehaviour
         {
             mainMenuRoot,
             adminPasswordPanel,
+            settingsPanel,
             coursesPanel,
             tasksPanel,
             taskEditorPanel,
@@ -86,6 +88,24 @@ public class UIManager : MonoBehaviour
     public void ShowAdminPassword()
     {
         ShowOnly(adminPasswordPanel);
+    }
+
+    public void ShowSettingsPanel()
+    {
+        if (settingsPanel != null)
+        {
+            ShowOnly(settingsPanel);
+            return;
+        }
+
+        var settingsController = FindObjectOfType<SettingsController>(true);
+        if (settingsController != null)
+        {
+            settingsController.OpenSettings();
+            return;
+        }
+
+        Debug.LogWarning("UIManager: settingsPanel is not assigned and SettingsController was not found.");
     }
 
     public void ShowCoursesPanel()
