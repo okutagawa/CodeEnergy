@@ -13,6 +13,7 @@ public static class SaveService
     public const string GameStateFileName = "gamestate.json";
 
     public static string SaveFolder => Path.Combine(Application.persistentDataPath, "GameData");
+    public static string LegacySaveFolder => Application.persistentDataPath;
     public static string BackupsFolder => Path.Combine(SaveFolder, "Backups");
     public static string TransferFolder => Path.Combine(SaveFolder, "Transfer");
 
@@ -32,6 +33,7 @@ public static class SaveService
     public static void EnsureWorkingFiles()
     {
         EnsureSaveFolder();
+        MigrateLegacyFilesIfNeeded();
         EnsureFileExists(CoursesFileName, JsonUtility.ToJson(new CoursesContainer(), true));
         EnsureFileExists(TasksFileName, JsonUtility.ToJson(new TaskListWrapper(), true));
         EnsureFileExists(GameStateFileName, JsonUtility.ToJson(new GameStateData(), true));
@@ -219,12 +221,50 @@ public static class SaveService
     {
         EnsureSaveFolder();
 
+        OpenFolderInExplorer(SaveFolder);
+    }
+
+    public static void OpenTransferFolder()
+    {
+        EnsureSaveFolder();
+        OpenFolderInExplorer(TransferFolder);
+    }
+
+    private static void OpenFolderInExplorer(string folderPath)
+    {
+        if (string.IsNullOrWhiteSpace(folderPath)) return;
+
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-        Process.Start("explorer.exe", SaveFolder.Replace("/", "\\"));
+        var normalized = folderPath.Replace("/", "\\");
+        var info = new ProcessStartInfo("explorer.exe", normalized)
+        {
+            UseShellExecute = true
+        };
+        Process.Start(info);
 #else
-        Application.OpenURL("file://" + SaveFolder);
+        Application.OpenURL("file://" + folderPath);
 #endif
     }
+
+    private static void MigrateLegacyFilesIfNeeded()
+    {
+        MigrateLegacyFile(CoursesFileName);
+        MigrateLegacyFile(TasksFileName);
+        MigrateLegacyFile(GameStateFileName);
+    }
+
+    private static void MigrateLegacyFile(string fileName)
+    {
+        var targetPath = Path.Combine(SaveFolder, fileName);
+        if (File.Exists(targetPath)) return;
+
+        var legacyPath = Path.Combine(LegacySaveFolder, fileName);
+        if (!File.Exists(legacyPath)) return;
+
+        File.Copy(legacyPath, targetPath, false);
+        Log($"Migrated legacy file: {legacyPath} -> {targetPath}");
+    }
+
 
     private static bool RestoreFromBundleFile(string bundleFolder, string fileName)
     {

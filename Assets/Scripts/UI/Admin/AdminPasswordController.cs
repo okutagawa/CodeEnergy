@@ -54,6 +54,7 @@ public class AdminPasswordController : MonoBehaviour
         var entered = passwordInput.text ?? string.Empty;
         if (entered == expectedPassword)
         {
+            GameState.EnsureExists();
             if (GameState.Instance != null) GameState.Instance.IsAdminMode = true;
             _attemptsLeft = maxAttempts;
             UpdateAttemptsText();

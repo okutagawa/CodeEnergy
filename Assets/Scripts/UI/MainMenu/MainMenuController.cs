@@ -1,4 +1,3 @@
-using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -14,10 +13,11 @@ public class MainMenuController : MonoBehaviour
     public Button btnAdmin;
 
     private const string GameSceneName = "GameScene";
-    private const string GameStateFileName = "gamestate.json";
 
     private void Start()
     {
+        GameState.EnsureExists();
+
         BindButton(btnStartGame, OnStartGameClicked);
         BindButton(btnContinue, OnContinueClicked);
         BindButton(btnSettings, OnSettingsClicked);
@@ -108,7 +108,6 @@ public class MainMenuController : MonoBehaviour
 
     private bool HasSaveFile()
     {
-        var filePath = Path.Combine(Application.persistentDataPath, GameStateFileName);
-        return File.Exists(filePath);
+        return SaveService.FileExists(SaveService.GameStateFileName);
     }
 }

@@ -100,6 +100,7 @@ public class CourseListManager : MonoBehaviour
         }
 
         SetStatus($"Imported {fileName} from: {importPath}");
+        SaveService.OpenTransferFolder();
     }
 
     private void OnExportJson(string fileName)
@@ -114,6 +115,7 @@ public class CourseListManager : MonoBehaviour
         }
 
         SetStatus($"Exported {fileName} to: {exportPath}");
+        SaveService.OpenTransferFolder();
     }
 
     private void OnCreateBackupClicked()
@@ -151,6 +153,7 @@ public class CourseListManager : MonoBehaviour
 
     private bool EnsureAdmin()
     {
+        GameState.EnsureExists();
         if (GameState.Instance != null && GameState.Instance.IsAdminMode) return true;
         SetStatus("Operation is available only in admin mode.", true);
         return false;
