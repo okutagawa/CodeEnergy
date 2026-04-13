@@ -4,10 +4,12 @@ using UnityEngine;
 
 public static class SaveManager
 {
-    private static string FilePath => Path.Combine(Application.persistentDataPath, "gamestate.json");
+    private static string FilePath => SaveService.GetPath(SaveService.GameStateFileName);
 
     public static void Save(GameStateData data)
     {
+        SaveService.EnsureWorkingFiles();
+
         if (data == null) return;
         data.lastSavedIso = DateTime.Now.ToString("O");
         try
@@ -27,6 +29,8 @@ public static class SaveManager
 
     public static GameStateData Load()
     {
+        SaveService.EnsureWorkingFiles();
+
         try
         {
             if (!File.Exists(FilePath))
@@ -34,6 +38,7 @@ public static class SaveManager
                 Debug.Log("[SaveManager] No save file found, returning new GameStateData");
                 return new GameStateData();
             }
+
             var json = File.ReadAllText(FilePath);
             var data = JsonUtility.FromJson<GameStateData>(json) ?? new GameStateData();
             Debug.Log($"[SaveManager] Loaded gamestate from {FilePath}");
@@ -48,7 +53,14 @@ public static class SaveManager
 
     public static void Delete()
     {
-        try { if (File.Exists(FilePath)) File.Delete(FilePath); Debug.Log("[SaveManager] Save deleted"); }
-        catch (Exception ex) { Debug.LogError($"[SaveManager] Delete failed: {ex}"); }
+        try
+        {
+            if (File.Exists(FilePath)) File.Delete(FilePath);
+            Debug.Log("[SaveManager] Save deleted");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[SaveManager] Delete failed: {ex}");
+        }
     }
 }

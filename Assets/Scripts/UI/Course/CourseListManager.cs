@@ -1,12 +1,13 @@
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using System.Linq;
 using MyGame.Models;
 using MyGame.Data;
 
 public class CourseListManager : MonoBehaviour
 {
+    [Header("Courses CRUD")]
     public RectTransform contentCourses;
     public GameObject prefabCourseItem;
     public InputField inputCourseName;
@@ -15,32 +16,159 @@ public class CourseListManager : MonoBehaviour
     public Button buttonEditSelected;
     public Button buttonExit;
 
+    [Header("Admin JSON")]
+    public Button buttonImportCourses;
+    public Button buttonExportCourses;
+    public Button buttonImportTasks;
+    public Button buttonExportTasks;
+    public Button buttonImportGameState;
+    public Button buttonExportGameState;
+    public Button buttonCreateBackup;
+    public Button buttonRestoreBackup;
+    public Button buttonOpenDataFolder;
+    public Text operationStatusText;
+
     private CoursesContainer container;
-    private Dictionary<int, GameObject> instantiated = new Dictionary<int, GameObject>();
+    private readonly Dictionary<int, GameObject> instantiated = new Dictionary<int, GameObject>();
     private int selectedCourseId = -1;
 
     void Start()
     {
-        if (buttonAddCourse != null) 
-        { 
-            buttonAddCourse.onClick.RemoveAllListeners(); 
-            buttonAddCourse.onClick.AddListener(OnAddCourseClicked); 
+        SaveService.EnsureWorkingFiles();
+
+        if (buttonAddCourse != null)
+        {
+            buttonAddCourse.onClick.RemoveAllListeners();
+            buttonAddCourse.onClick.AddListener(OnAddCourseClicked);
         }
         if (buttonDeleteSelected != null) buttonDeleteSelected.onClick.AddListener(DeleteSelectedCourse);
-        if (buttonExit != null) 
-        { 
-            buttonExit.onClick.RemoveAllListeners(); 
-            buttonExit.onClick.AddListener(OnExitClicked); 
+        if (buttonExit != null)
+        {
+            buttonExit.onClick.RemoveAllListeners();
+            buttonExit.onClick.AddListener(OnExitClicked);
         }
+
+        BindAdminButtons();
 
         container = DataManager.LoadCourses();
         RefreshUI();
     }
 
+    private void BindAdminButtons()
+    {
+        Bind(buttonImportCourses, () => OnImportJson(SaveService.CoursesFileName, SaveService.ValidateCoursesJson));
+        Bind(buttonExportCourses, () => OnExportJson(SaveService.CoursesFileName));
+
+        Bind(buttonImportTasks, () => OnImportJson(SaveService.TasksFileName, SaveService.ValidateTasksJson));
+        Bind(buttonExportTasks, () => OnExportJson(SaveService.TasksFileName));
+
+        Bind(buttonImportGameState, () => OnImportJson(SaveService.GameStateFileName, SaveService.ValidateGameStateJson));
+        Bind(buttonExportGameState, () => OnExportJson(SaveService.GameStateFileName));
+
+        Bind(buttonCreateBackup, OnCreateBackupClicked);
+        Bind(buttonRestoreBackup, OnRestoreBackupClicked);
+        Bind(buttonOpenDataFolder, OnOpenDataFolderClicked);
+    }
+
+    private static void Bind(Button button, UnityEngine.Events.UnityAction action)
+    {
+        if (button == null) return;
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(action);
+    }
+
+    private void OnImportJson(string fileName, System.Func<string, (bool ok, string error)> validator)
+    {
+        if (!EnsureAdmin()) return;
+
+        var importPath = SaveService.GetTransferPath(fileName);
+        if (!SaveService.ImportFile(importPath, fileName, validator, out var error))
+        {
+            SetStatus($"Import failed for {fileName}: {error}", true);
+            return;
+        }
+
+        if (fileName == SaveService.CoursesFileName)
+        {
+            container = DataManager.LoadCourses();
+            RefreshUI();
+        }
+
+        if (fileName == SaveService.GameStateFileName)
+        {
+            GameState.Instance?.LoadState();
+        }
+
+        SetStatus($"Imported {fileName} from: {importPath}");
+    }
+
+    private void OnExportJson(string fileName)
+    {
+        if (!EnsureAdmin()) return;
+
+        var exportPath = SaveService.GetTransferPath(fileName);
+        if (!SaveService.ExportFile(fileName, exportPath, out var error))
+        {
+            SetStatus($"Export failed for {fileName}: {error}", true);
+            return;
+        }
+
+        SetStatus($"Exported {fileName} to: {exportPath}");
+    }
+
+    private void OnCreateBackupClicked()
+    {
+        if (!EnsureAdmin()) return;
+
+        var backupFolder = SaveService.CreateBackupBundle();
+        SetStatus($"Backup created: {backupFolder}");
+    }
+
+    private void OnRestoreBackupClicked()
+    {
+        if (!EnsureAdmin()) return;
+
+        if (!SaveService.RestoreLatestBackupBundle(out var restoredFrom, out var error))
+        {
+            SetStatus($"Restore failed: {error}", true);
+            return;
+        }
+
+        container = DataManager.LoadCourses();
+        RefreshUI();
+        GameState.Instance?.LoadState();
+
+        SetStatus($"Restored backup from: {restoredFrom}");
+    }
+
+    private void OnOpenDataFolderClicked()
+    {
+        if (!EnsureAdmin()) return;
+
+        SaveService.OpenDataFolder();
+        SetStatus($"Opened data folder: {SaveService.SaveFolder}");
+    }
+
+    private bool EnsureAdmin()
+    {
+        if (GameState.Instance != null && GameState.Instance.IsAdminMode) return true;
+        SetStatus("Operation is available only in admin mode.", true);
+        return false;
+    }
+
+    private void SetStatus(string text, bool isError = false)
+    {
+        Debug.Log(isError ? "[Admin JSON] " + text : "[Admin JSON] " + text);
+        if (operationStatusText != null)
+        {
+            operationStatusText.text = text;
+            operationStatusText.color = isError ? Color.red : Color.white;
+        }
+    }
+
     void OnAddCourseClicked()
     {
-        var title = inputCourseName.text.Trim();
-        Debug.Log("CourseListManager: Adding course with title: '" + title + "'");
+        var title = inputCourseName.text.Trim();       
         if (string.IsNullOrEmpty(title)) return;
 
         var model = new CourseModel { id = DataManager.NextCourseId(container), name = title };
@@ -62,14 +190,14 @@ public class CourseListManager : MonoBehaviour
         item.SetSelected(c.id == selectedCourseId);
 
         // force layout rebuild so ScrollRect updates immediately
-        UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(contentCourses);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(contentCourses);
     }
 
     void OnCourseSingleClick(CourseModel c) => SelectCourse(c.id);
 
     void OnCourseDoubleClick(CourseModel c)
     {
-        Debug.Log("CourseListManager: double click course id=" + c.id + " name='" + c.name + "'");
+        
         UIManager.Instance?.OpenTasksWindowForCourse(c.id);
     }
 
@@ -99,7 +227,7 @@ public class CourseListManager : MonoBehaviour
         {
             Destroy(go);
             instantiated.Remove(selectedCourseId);
-            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(contentCourses);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(contentCourses);
         }
 
         container.courses.RemoveAll(x => x.id == selectedCourseId);

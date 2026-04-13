@@ -8,12 +8,14 @@ namespace MyGame.Data
 {
     public static class DataManager
     {
-        private static string CoursesFilePath => Path.Combine(Application.persistentDataPath, "courses.json");
-        private static string TasksFilePath => Path.Combine(Application.persistentDataPath, "tasks.json");
+        private static string CoursesFilePath => SaveService.GetPath(SaveService.CoursesFileName);
+        private static string TasksFilePath => SaveService.GetPath(SaveService.TasksFileName);
 
         // Courses
         public static CoursesContainer LoadCourses()
         {
+            SaveService.EnsureWorkingFiles();
+
             if (!File.Exists(CoursesFilePath)) return new CoursesContainer();
             try
             {
@@ -22,22 +24,24 @@ namespace MyGame.Data
             }
             catch
             {
-                Debug.LogWarning("DataManager: ошибка чтения courses.json, возвращаю пустой контейнер");
+                Debug.LogWarning("DataManager: failed to parse courses.json, returning empty container");
                 return new CoursesContainer();
             }
         }
 
         public static void SaveCourses(CoursesContainer container)
         {
+            SaveService.EnsureWorkingFiles();
+
             try
             {
-                var json = JsonUtility.ToJson(container, true);
-                File.WriteAllText(CoursesFilePath, json);
+                var json = JsonUtility.ToJson(container ?? new CoursesContainer(), true);
+                SaveService.SaveFile(SaveService.CoursesFileName, json);
                 Debug.Log("DataManager: courses saved to " + CoursesFilePath);
             }
             catch (System.Exception ex)
             {
-                Debug.LogError("DataManager: ошибка сохранения courses " + ex);
+                Debug.LogError("DataManager: error while saving courses " + ex);
             }
         }
 
@@ -50,6 +54,8 @@ namespace MyGame.Data
         // Tasks
         public static List<TaskModel> LoadTasks()
         {
+            SaveService.EnsureWorkingFiles();
+
             Debug.Log($"DataManager.LoadTasks called. path={TasksFilePath}");
             try
             {
@@ -80,6 +86,8 @@ namespace MyGame.Data
 
         public static void SaveTasks(List<TaskModel> tasks)
         {
+            SaveService.EnsureWorkingFiles();
+
             try
             {
                 // защита: убедимся, что директория существует
@@ -93,7 +101,7 @@ namespace MyGame.Data
                 var wrapper = new TaskListWrapper { tasks = safeTasks };
                 var json = JsonUtility.ToJson(wrapper, true);
 
-                File.WriteAllText(TasksFilePath, json);
+                SaveService.SaveFile(SaveService.TasksFileName, json);
 
                 Debug.Log($"DataManager.SaveTasks finished. Written bytes={json.Length}. Time={System.DateTime.Now:O}");
             }
