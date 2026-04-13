@@ -19,6 +19,43 @@ public class UIManager : MonoBehaviour
     private CourseListManager _courseListManager;
     private TasksListManager _tasksListManager;
 
+    private void ResolveRuntimePanelReferences()
+    {
+        if (mainMenuRoot == null)
+        {
+            var mainMenu = FindObjectOfType<MainMenuController>(true);
+            if (mainMenu != null)
+                mainMenuRoot = mainMenu.gameObject;
+        }
+
+        if (adminPasswordPanel == null)
+        {
+            var admin = FindObjectOfType<AdminPasswordController>(true);
+            if (admin != null)
+                adminPasswordPanel = admin.gameObject;
+        }
+
+        if (settingsPanel == null)
+        {
+            var settings = FindObjectOfType<SettingsController>(true);
+            if (settings != null)
+                settingsPanel = settings.gameObject;
+        }
+
+        if (coursesPanel == null)
+        {
+            var courses = FindObjectOfType<CourseListManager>(true);
+            if (courses != null)
+                coursesPanel = courses.gameObject;
+        }
+
+        if (tasksPanel == null)
+        {
+            var tasks = FindObjectOfType<TasksListManager>(true);
+            if (tasks != null)
+                tasksPanel = tasks.gameObject;
+        }
+    }
 
     private void Awake()
     {
@@ -57,6 +94,8 @@ public class UIManager : MonoBehaviour
     // ѕоказываем только одну панель, скрыва€ остальные (без уничтожени€)
     public void ShowOnly(GameObject panel)
     {
+        ResolveRuntimePanelReferences();
+
         // —писок всех известных панелей Ч расшир€йте по необходимости
         var all = new GameObject[]
         {
@@ -90,6 +129,13 @@ public class UIManager : MonoBehaviour
         if (mainMenuRoot != null)
             mainMenuRoot.SetActive(true);
 
+        if (adminPasswordPanel == null)
+        {
+            var found = FindObjectOfType<AdminPasswordController>(true);
+            if (found != null)
+                adminPasswordPanel = found.gameObject;
+        }
+
         if (adminPasswordPanel != null)
         {
             adminPasswordPanel.SetActive(true);
@@ -121,18 +167,40 @@ public class UIManager : MonoBehaviour
 
     public void HideAdminPassword()
     {
+        if (adminPasswordPanel == null)
+        {
+            var found = FindObjectOfType<AdminPasswordController>(true);
+            if (found != null)
+                adminPasswordPanel = found.gameObject;
+        }
+
         if (adminPasswordPanel != null)
             adminPasswordPanel.SetActive(false);
     }
 
     public void HideSettingsPanel()
     {
+        if (settingsPanel == null)
+        {
+            var found = FindObjectOfType<SettingsController>(true);
+            if (found != null)
+                settingsPanel = found.gameObject;
+        }
+
         if (settingsPanel != null)
             settingsPanel.SetActive(false);
     }
 
     public void ShowCoursesPanel()
     {
+        ResolveRuntimePanelReferences();
+
+        if (coursesPanel == null)
+        {
+            Debug.LogError("UIManager: coursesPanel is not assigned and CourseListManager was not found in scene");
+            return;
+        }
+
         ShowOnly(coursesPanel);
         // ќбновить список курсов при показе
         if (_courseListManager == null) CacheManagers();
