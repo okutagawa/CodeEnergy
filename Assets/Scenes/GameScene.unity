@@ -33331,7 +33331,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1928541741
 RectTransform:
   m_ObjectHideFlags: 0
@@ -33364,7 +33364,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 386fe36aba64b2b42bd00eac8667b1d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PauseMenuController
-  pausePanel: {fileID: 1928541740}
+  pausePanel: {fileID: 769967069}
   btnResume: {fileID: 1853128889}
   btnSettings: {fileID: 1591125342}
   btnQuitToMenu: {fileID: 1989001185}

@@ -23,6 +23,8 @@ public class PauseMenuController : MonoBehaviour
     private bool pauseUiFocusTaken = false;
     private GameObject settingsInstance;
 
+    public bool IsPaused => isPaused;
+
     void Awake()
     {
         if (pausePanel != null) pausePanel.SetActive(false);
@@ -160,6 +162,26 @@ public class PauseMenuController : MonoBehaviour
 
     public void QuitToMenu()
     {
+        // Clear pause state before switching scene.
+        if (settingsInstance != null && settingsInstance.activeSelf)
+            CloseSettings();
+
+        isPaused = false;
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
+        PauseBroadcast(false);
+
+        if (pauseUiFocusTaken)
+        {
+            CursorUIManager.Instance?.ExitUiFocus();
+            pauseUiFocusTaken = false;
+        }
+
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(null);
+
         // Важно: перед сменой сцены восстановить Time.timeScale
         Time.timeScale = 1f;
         AudioListener.pause = false;

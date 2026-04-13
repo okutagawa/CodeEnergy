@@ -208,6 +208,13 @@ public class SettingsController : MonoBehaviour
 
     public void CloseSettings()
     {
+        var pauseMenu = FindObjectOfType<PauseMenuController>(true);
+        if (pauseMenu != null && pauseMenu.IsPaused)
+        {
+            pauseMenu.CloseSettings();
+            return;
+        }
+
         if (UIManager.Instance != null)
         {
             UIManager.Instance.HideSettingsPanel();
