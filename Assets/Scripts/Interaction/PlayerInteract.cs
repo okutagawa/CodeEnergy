@@ -16,8 +16,13 @@ public class PlayerInteract : MonoBehaviour
     private Outline currentOutline;
     private Collider currentHoveredCollider;
 
+    // pause flag
+    private bool isPaused = false;
+
     void Update()
     {
+        if (isPaused) return; // не обновляем hover и не реагируем на E в паузе
+
         UpdateHover();
 
         if (Input.GetKeyDown(KeyCode.E))
@@ -104,6 +109,14 @@ public class PlayerInteract : MonoBehaviour
         return hitCollider.GetComponent<NPCInteractable>()
                ?? hitCollider.GetComponentInParent<NPCInteractable>()
                ?? hitCollider.GetComponentInChildren<NPCInteractable>();
+    }
+
+    // Pause handler
+    public void OnGamePaused(bool paused)
+    {
+        // при паузе снимаем подсветку, чтобы не оставалось включённых outline
+        if (paused) ClearCurrentOutline();
+        isPaused = paused;
     }
 
     // Опционально: для визуальной отладки

@@ -10,6 +10,9 @@ public class CharacterMovement : MonoBehaviour
     private CharacterController controller;
     private Vector3 velocity;
 
+    // pause flag
+    private bool isPaused = false;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -17,6 +20,8 @@ public class CharacterMovement : MonoBehaviour
 
     void Update()
     {
+        if (isPaused) return; // <-- игнорируем ввод и движение в паузе
+
         bool isGrounded = controller.isGrounded;
 
         if (isGrounded && velocity.y < 0)
@@ -37,5 +42,11 @@ public class CharacterMovement : MonoBehaviour
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+    }
+
+    // Метод, который будет вызван PauseMenuController через SendMessage
+    public void OnGamePaused(bool paused)
+    {
+        isPaused = paused;
     }
 }
