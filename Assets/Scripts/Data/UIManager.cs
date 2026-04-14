@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
@@ -71,6 +72,23 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         Debug.Log("persistentDataPath = " + Application.persistentDataPath);
+        ResolveRuntimePanelReferences();
+        CacheManagers();
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+    }
+
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        ResolveRuntimePanelReferences();
         CacheManagers();
     }
 
