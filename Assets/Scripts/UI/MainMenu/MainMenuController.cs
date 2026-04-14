@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
@@ -17,6 +18,7 @@ public class MainMenuController : MonoBehaviour
     private void Start()
     {
         GameState.EnsureExists();
+        RecoverMenuInteractionState();
 
         BindButton(btnStartGame, OnStartGameClicked);
         BindButton(btnContinue, OnContinueClicked);
@@ -25,6 +27,18 @@ public class MainMenuController : MonoBehaviour
         BindButton(btnAdmin, OnAdminClicked);
 
         RefreshContinueButtonState();
+    }
+
+    private static void RecoverMenuInteractionState()
+    {
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
+
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(null);
     }
 
     private static void BindButton(Button button, UnityEngine.Events.UnityAction action)

@@ -111,7 +111,7 @@ public class TasksListManager : MonoBehaviour
     private void OnTaskDoubleClick(TaskModel t)
     {
         SelectTask(t.id);
-        Debug.Log("Double clicked task id: " + t.id + " (TaskEditor not opened in test)");
+        OnEditTaskClicked();
     }
 
     public void SelectTask(int taskId)
