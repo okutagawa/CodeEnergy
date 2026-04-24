@@ -1055,6 +1055,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7acd25572bdade7478684c73d477d6cb, type: 3}
   m_PrefabInstance: {fileID: 27730093}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &29207300 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7959952348516314599, guid: ef3f81015cc5b974e9541d4770e2a2cb, type: 3}
+  m_PrefabInstance: {fileID: 1087557592804665321}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &30748488
 GameObject:
   m_ObjectHideFlags: 0
@@ -15873,12 +15878,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 949382051}
-  - component: {fileID: 949382055}
-  - component: {fileID: 949382054}
-  - component: {fileID: 949382053}
-  - component: {fileID: 949382052}
   m_Layer: 0
-  m_Name: NPC_Drone
+  m_Name: NPC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15900,81 +15901,6 @@ Transform:
   - {fileID: 1648002392}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &949382052
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 949382050}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e11f9aa3e5fb7dd41a91c9d4f4c18ecc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NPCInteractable
-  quizPanelReference: {fileID: 0}
---- !u!114 &949382053
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 949382050}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1dc3f8ddd0d47f04ebe3799af15a6f06, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NPCIdentity
-  guid: fcf79346-c401-41a3-bd00-19382bd1f562
-  displayName: Drone
---- !u!54 &949382054
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 949382050}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!65 &949382055
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 949382050}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &955816760
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28795,6 +28721,55 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7294915298487547741, guid: ef3f81015cc5b974e9541d4770e2a2cb, type: 3}
   m_PrefabInstance: {fileID: 1087557592804665321}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1648002394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29207300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e11f9aa3e5fb7dd41a91c9d4f4c18ecc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCInteractable
+  quizPanelReference: {fileID: 1577703774}
+--- !u!114 &1648002395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29207300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dc3f8ddd0d47f04ebe3799af15a6f06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCIdentity
+  guid: 43ea0978-ad52-467b-88ad-386164f09a70
+  displayName: drone
+--- !u!64 &1648002396
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29207300}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -5916755236536251945, guid: a55ea7a157e799045ace0ab4d7bff3a9, type: 3}
 --- !u!1 &1648978454 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5231362815219648064, guid: 4568fbe204d45f4428c3521030fa1708, type: 3}
@@ -37731,7 +37706,16 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7959952348516314599, guid: ef3f81015cc5b974e9541d4770e2a2cb, type: 3}
+      insertIndex: 1
+      addedObject: {fileID: 1648002396}
+    - targetCorrespondingSourceObject: {fileID: 7959952348516314599, guid: ef3f81015cc5b974e9541d4770e2a2cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1648002395}
+    - targetCorrespondingSourceObject: {fileID: 7959952348516314599, guid: ef3f81015cc5b974e9541d4770e2a2cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1648002394}
   m_SourcePrefab: {fileID: 100100000, guid: ef3f81015cc5b974e9541d4770e2a2cb, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
