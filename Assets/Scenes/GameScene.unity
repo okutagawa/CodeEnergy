@@ -12036,6 +12036,11 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -5495902117074765545, guid: 90d2b9df9a42a3743bd67bbdb0c7e931, type: 3}
+--- !u!1 &719864105 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4568fbe204d45f4428c3521030fa1708, type: 3}
+  m_PrefabInstance: {fileID: 1175442136}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &720554080
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20349,6 +20354,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4568fbe204d45f4428c3521030fa1708, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1175442138}
     - targetCorrespondingSourceObject: {fileID: 4383353755243004527, guid: 4568fbe204d45f4428c3521030fa1708, type: 3}
       insertIndex: -1
       addedObject: {fileID: 577906910}
@@ -20361,6 +20369,29 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4568fbe204d45f4428c3521030fa1708, type: 3}
   m_PrefabInstance: {fileID: 1175442136}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1175442138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 719864105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4255c53983ad88479610c3602fadbc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RandomLightFlicker
+  targetLight: {fileID: 0}
+  targetRenderer: {fileID: 0}
+  emissionPropertyName: _EmissionColor
+  baseEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  minEmissionMultiplier: 0.2
+  maxEmissionMultiplier: 7
+  minLightIntensity: 0.2
+  maxLightIntensity: 2
+  minInterval: 0.04
+  maxInterval: 0.2
+  smoothSpeed: 10
 --- !u!1 &1175530434 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8236076569268209247, guid: eb3559d1612453d4a9030b14551423f5, type: 3}
@@ -23021,6 +23052,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4568fbe204d45f4428c3521030fa1708, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1314784876}
     - targetCorrespondingSourceObject: {fileID: 4383353755243004527, guid: 4568fbe204d45f4428c3521030fa1708, type: 3}
       insertIndex: -1
       addedObject: {fileID: 970989507}
@@ -23152,6 +23186,34 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 0}
+--- !u!1 &1314784875 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4568fbe204d45f4428c3521030fa1708, type: 3}
+  m_PrefabInstance: {fileID: 1307520525}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1314784876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314784875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4255c53983ad88479610c3602fadbc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RandomLightFlicker
+  targetLight: {fileID: 0}
+  targetRenderer: {fileID: 0}
+  emissionPropertyName: _EmissionColor
+  baseEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  minEmissionMultiplier: -7.19
+  maxEmissionMultiplier: 19.5
+  minLightIntensity: 0.1
+  maxLightIntensity: 2.2
+  minInterval: 0.02
+  maxInterval: 0.09
+  smoothSpeed: 20
 --- !u!1001 &1325292961
 PrefabInstance:
   m_ObjectHideFlags: 0

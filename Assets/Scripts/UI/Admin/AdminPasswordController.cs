@@ -94,6 +94,6 @@ public class AdminPasswordController : MonoBehaviour
 
     private void UpdateAttemptsText()
     {
-        if (attemptsText != null) attemptsText.text = $"Attempts left: {_attemptsLeft}";
+        if (attemptsText != null) attemptsText.text = $"{_attemptsLeft}";
     }
 }
