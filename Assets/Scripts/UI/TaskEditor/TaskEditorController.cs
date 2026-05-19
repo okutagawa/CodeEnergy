@@ -32,11 +32,14 @@ public class TaskEditorController : MonoBehaviour
     {
         if (createTaskBtn != null) { createTaskBtn.onClick.RemoveAllListeners(); createTaskBtn.onClick.AddListener(OnCreateRow); }
         if (saveAndExitBtn != null) { saveAndExitBtn.onClick.RemoveAllListeners(); saveAndExitBtn.onClick.AddListener(OnSaveAndExit); }
+        TryAutoAssignUiRefs();
     }
 
     // загрузка существующих заданий и отображения строк
     public void OpenForCourseEditor(int courseId)
     {
+        if (!EnsureUiReady(nameof(OpenForCourseEditor))) return;
+
         isEditing = false;
         editingTaskId = -1;
         contextCourseId = courseId;
@@ -110,6 +113,8 @@ public class TaskEditorController : MonoBehaviour
     {
         if (model == null) { Debug.LogError("TaskEditorController.OpenForEdit: model is null"); return; }
 
+        if (!EnsureUiReady(nameof(OpenForEdit))) return;
+
         // Попытаемся определить courseId, если он не передан явно
         coursesContainer = DataManager.LoadCourses();
         allTasks = DataManager.LoadTasks();
@@ -162,6 +167,8 @@ public class TaskEditorController : MonoBehaviour
 
     public void OnCreateRow()
     {
+        if (!EnsureUiReady(nameof(OnCreateRow))) return;
+
         var go = Instantiate(prefabTaskRow, contentRows);
         var row = go.GetComponent<TaskRow>();
         if (row == null)
@@ -193,6 +200,41 @@ public class TaskEditorController : MonoBehaviour
         yield return null;
         if (scrollRect != null) scrollRect.verticalNormalizedPosition = 0f;
     }
+
+    private bool EnsureUiReady(string caller)
+    {
+        TryAutoAssignUiRefs();
+
+        if (contentRows == null)
+        {
+            Debug.LogError($"TaskEditorController.{caller}: contentRows is not assigned.");
+            return false;
+        }
+
+        if (prefabTaskRow == null)
+        {
+            Debug.LogError($"TaskEditorController.{caller}: prefabTaskRow is not assigned.");
+            return false;
+        }
+
+        if (titleText == null)
+        {
+            Debug.LogError($"TaskEditorController.{caller}: titleText is not assigned.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void TryAutoAssignUiRefs()
+    {
+        if (titleText == null)
+            titleText = GetComponentInChildren<Text>(true);
+
+        if (contentRows == null && scrollRect != null && scrollRect.content != null)
+            contentRows = scrollRect.content;
+    }
+
 
     private void PopulateNpcDropdown(TaskRow row)
     {
