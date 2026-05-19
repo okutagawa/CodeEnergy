@@ -12,7 +12,12 @@ public static class SaveService
     public const string TasksFileName = "tasks.json";
     public const string GameStateFileName = "gamestate.json";
 
-    public static string SaveFolder => Path.Combine(Application.persistentDataPath, "GameData");
+    public static string TestSaveFolderOverride { get; set; }
+
+    public static string SaveFolder =>
+        string.IsNullOrEmpty(TestSaveFolderOverride)
+            ? Path.Combine(Application.persistentDataPath, "GameData")
+            : TestSaveFolderOverride;
     public static string LegacySaveFolder => Application.persistentDataPath;
     public static string BackupsFolder => Path.Combine(SaveFolder, "Backups");
     public static string TransferFolder => Path.Combine(SaveFolder, "Transfer");
