@@ -66,8 +66,20 @@ public class TasksListManager : MonoBehaviour
     {
         Debug.Log("TasksListManager.RefreshUI Ч clearing and recreating task items. currentCourse.taskIds count=" + (currentCourse?.taskIds?.Count ?? 0));
         // очистка старых элементов
-        foreach (var kv in instantiated.Values) Destroy(kv);
+        foreach (var kv in instantiated.Values)
+        {
+            if (kv != null) Destroy(kv);
+        }
         instantiated.Clear();
+
+        if (contentTasks != null)
+        {
+            for (int i = contentTasks.childCount - 1; i >= 0; i--)
+            {
+                var child = contentTasks.GetChild(i);
+                if (child != null) Destroy(child.gameObject);
+            }
+        }
 
         if (currentCourse == null)
         {
@@ -90,6 +102,11 @@ public class TasksListManager : MonoBehaviour
 
     private void AddTaskToUI(TaskModel t)
     {
+        if (prefabTaskItem == null || contentTasks == null)
+        {
+            Debug.LogError("TasksListManager.AddTaskToUI: prefabTaskItem/contentTasks is not assigned");
+            return;
+        }
         var go = Instantiate(prefabTaskItem, contentTasks);
         var item = go.GetComponent<TaskItem>();
         if (item == null)
@@ -100,6 +117,14 @@ public class TasksListManager : MonoBehaviour
         }
 
         item.Initialize(t);
+
+        if (item.textTitle == null || item.buttonRoot == null)
+        {
+            Debug.LogError($"TasksListManager.AddTaskToUI: invalid TaskItem prefab setup for task id={t.id}. Destroying instance.");
+            Destroy(go);
+            return;
+        }
+
         item.onSingleClick = OnTaskSingleClick;
         item.onDoubleClick = OnTaskDoubleClick;
         instantiated[t.id] = go;

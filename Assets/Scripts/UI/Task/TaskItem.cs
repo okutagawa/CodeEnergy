@@ -16,7 +16,32 @@ public class TaskItem : MonoBehaviour
 
     public void Initialize(TaskModel model)
     {
+        if (model == null)
+        {
+            Debug.LogError("TaskItem.Initialize: model is null");
+            return;
+        }
+
         data = model;
+
+        if (textTitle == null)
+            textTitle = GetComponentInChildren<Text>(true);
+
+        if (buttonRoot == null)
+            buttonRoot = GetComponent<Button>();
+
+        if (textTitle == null)
+        {
+            Debug.LogError($"TaskItem.Initialize: Text reference is missing for task id={model.id}");
+            return;
+        }
+
+        if (buttonRoot == null)
+        {
+            Debug.LogError($"TaskItem.Initialize: Button reference is missing for task id={model.id}");
+            return;
+        }
+
         textTitle.text = string.IsNullOrEmpty(model.title) ? "(empty)" : model.title;
         buttonRoot.onClick.RemoveAllListeners();
         buttonRoot.onClick.AddListener(OnRootClicked);
