@@ -7,6 +7,8 @@ public class GameState : MonoBehaviour
 
     public static event Action<int> OnTotalStarsChanged;
 
+    public static event Action<int> OnTaskCompleted;
+
     public bool IsAdminMode = false;
 
     private GameStateData _data;
@@ -60,9 +62,25 @@ public class GameState : MonoBehaviour
     public void MarkTaskCompleted(int taskId)
     {
         var d = GetData();
-        if (!d.completedTaskIds.Contains(taskId)) d.completedTaskIds.Add(taskId);
+        bool isNew = !d.completedTaskIds.Contains(taskId);
+        if (isNew)
+        {
+            d.completedTaskIds.Add(taskId);
+        }
         d.startedTaskIds.Remove(taskId);
         SaveState();
+
+        if (isNew)
+        {
+            try
+            {
+                OnTaskCompleted?.Invoke(taskId);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[GameState] Exception in OntaskCompleted: {ex}");
+            }
+        }
     }
 
     public void MarkTaskStarted(int taskId)
