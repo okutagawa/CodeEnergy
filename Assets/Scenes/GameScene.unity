@@ -4931,8 +4931,12 @@ MonoBehaviour:
   targetLight: {fileID: 0}
   targetRenderer: {fileID: 0}
   stableLightIntensity: 1.2
+  stableLightRange: 8
+  stableLightColor: {r: 0, g: 1, b: 1, a: 1}
   emissionPropertyName: _EmissionColor
   stableEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  stableEmissionMultiplier: 6.12
+  applyStableValuesEveryFrame: 1
 --- !u!1001 &292103473
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6294,8 +6298,12 @@ MonoBehaviour:
   targetLight: {fileID: 0}
   targetRenderer: {fileID: 0}
   stableLightIntensity: 1.2
+  stableLightRange: 8
+  stableLightColor: {r: 0, g: 1, b: 1, a: 1}
   emissionPropertyName: _EmissionColor
   stableEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  stableEmissionMultiplier: 6.12
+  applyStableValuesEveryFrame: 1
 --- !u!1 &363035811 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: b785e0799b7254143a98ecaf3880a739, type: 3}
@@ -10997,8 +11005,12 @@ MonoBehaviour:
   targetLight: {fileID: 0}
   targetRenderer: {fileID: 0}
   stableLightIntensity: 1.2
+  stableLightRange: 8
+  stableLightColor: {r: 0, g: 1, b: 1, a: 1}
   emissionPropertyName: _EmissionColor
   stableEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  stableEmissionMultiplier: 6.12
+  applyStableValuesEveryFrame: 1
 --- !u!1 &627389053
 GameObject:
   m_ObjectHideFlags: 0
@@ -11707,6 +11719,9 @@ MonoBehaviour:
   unlockGate: {fileID: 0}
   doorAnimator: {fileID: 2094320811}
   openBoolParameter: IsOpen
+  closedStateName: 
+  animatorLayer: 0
+  disableAnimatorWhileLocked: 1
   player: {fileID: 767234243}
   openDistance: 3
   closeDistance: 4
@@ -14279,6 +14294,9 @@ MonoBehaviour:
   unlockGate: {fileID: 0}
   doorAnimator: {fileID: 2094320811}
   openBoolParameter: IsOpen
+  closedStateName: 
+  animatorLayer: 0
+  disableAnimatorWhileLocked: 1
   player: {fileID: 767234243}
   openDistance: 3
   closeDistance: 4
@@ -20771,8 +20789,12 @@ MonoBehaviour:
   targetLight: {fileID: 0}
   targetRenderer: {fileID: 0}
   stableLightIntensity: 1.2
+  stableLightRange: 8
+  stableLightColor: {r: 0, g: 1, b: 1, a: 1}
   emissionPropertyName: _EmissionColor
   stableEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  stableEmissionMultiplier: 6.12
+  applyStableValuesEveryFrame: 1
 --- !u!1 &1175530434 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8236076569268209247, guid: eb3559d1612453d4a9030b14551423f5, type: 3}
@@ -21587,8 +21609,12 @@ MonoBehaviour:
   targetLight: {fileID: 0}
   targetRenderer: {fileID: 0}
   stableLightIntensity: 1.2
+  stableLightRange: 8
+  stableLightColor: {r: 0, g: 1, b: 1, a: 1}
   emissionPropertyName: _EmissionColor
   stableEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  stableEmissionMultiplier: 6.12
+  applyStableValuesEveryFrame: 1
 --- !u!1001 &1211394184
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23584,8 +23610,12 @@ MonoBehaviour:
   targetLight: {fileID: 0}
   targetRenderer: {fileID: 0}
   stableLightIntensity: 1.2
+  stableLightRange: 8
+  stableLightColor: {r: 0, g: 1, b: 1, a: 1}
   emissionPropertyName: _EmissionColor
   stableEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  stableEmissionMultiplier: 6.12
+  applyStableValuesEveryFrame: 1
 --- !u!1001 &1325292961
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24424,8 +24454,12 @@ MonoBehaviour:
   targetLight: {fileID: 0}
   targetRenderer: {fileID: 0}
   stableLightIntensity: 1.2
+  stableLightRange: 8
+  stableLightColor: {r: 0, g: 1, b: 1, a: 1}
   emissionPropertyName: _EmissionColor
   stableEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  stableEmissionMultiplier: 6.12
+  applyStableValuesEveryFrame: 1
 --- !u!1001 &1383304325
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -36246,8 +36280,12 @@ MonoBehaviour:
   targetLight: {fileID: 0}
   targetRenderer: {fileID: 0}
   stableLightIntensity: 1.2
+  stableLightRange: 8
+  stableLightColor: {r: 0, g: 1, b: 1, a: 1}
   emissionPropertyName: _EmissionColor
   stableEmissionColor: {r: 0, g: 1, b: 1, a: 1}
+  stableEmissionMultiplier: 6.12
+  applyStableValuesEveryFrame: 1
 --- !u!1 &2101463556 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 7acd25572bdade7478684c73d477d6cb, type: 3}

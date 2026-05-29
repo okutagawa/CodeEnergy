@@ -11,12 +11,19 @@ public class LampStateByTasks : MonoBehaviour
     [SerializeField] private Light targetLight;
     [SerializeField] private Renderer targetRenderer;
 
-    [Header("Stable values")]
-    [SerializeField] private float stableLightIntensity = 1.2f;
+    [Header("Stable neon light")]
+    [SerializeField] private float stableLightIntensity = 4f;
+    [SerializeField] private float stableLightRange = 8f;
+    [SerializeField] private Color stableLightColor = Color.cyan;
+
+    [Header("Stable neon emission")]
     [SerializeField] private string emissionPropertyName = "_EmissionColor";
     [SerializeField] private Color stableEmissionColor = Color.cyan;
+    [SerializeField] private float stableEmissionMultiplier = 3f;
+    [SerializeField] private bool applyStableValuesEveryFrame = true;
 
     private MaterialPropertyBlock _block;
+    private bool _isStable;
 
     private void Awake()
     {
@@ -43,6 +50,12 @@ public class LampStateByTasks : MonoBehaviour
         GameState.OnTaskCompleted -= HandleTaskCompleted;
     }
 
+    private void Update()
+    {
+        if (_isStable && applyStableValuesEveryFrame)
+            ApplyStableNeonState();
+    }
+
     private void HandleTaskCompleted(int taskId)
     {
         RefreshState();
@@ -50,21 +63,29 @@ public class LampStateByTasks : MonoBehaviour
 
     private void RefreshState()
     {
-        bool stable = IsStableProgressReached();
+        _isStable = IsStableProgressReached();
 
         if (flicker != null)
-            flicker.enabled = !stable;
+            flicker.enabled = !_isStable;
 
-        if (!stable)
-            return;
+        if (_isStable)
+            ApplyStableNeonState();
+    }
 
+    private void ApplyStableNeonState()
+    {
         if (targetLight != null)
+        {
+            targetLight.enabled = true;
+            targetLight.color = stableLightColor;
             targetLight.intensity = stableLightIntensity;
+            targetLight.range = stableLightRange;
+        }
 
         if (targetRenderer != null)
         {
             targetRenderer.GetPropertyBlock(_block);
-            _block.SetColor(emissionPropertyName, stableEmissionColor);
+            _block.SetColor(emissionPropertyName, stableEmissionColor * Mathf.Max(0f, stableEmissionMultiplier));
             targetRenderer.SetPropertyBlock(_block);
         }
     }
