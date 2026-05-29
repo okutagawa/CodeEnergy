@@ -11717,11 +11717,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityDoorController
   unlockGate: {fileID: 0}
+  motionMode: 0
   doorAnimator: {fileID: 2094320811}
   openBoolParameter: IsOpen
   closedStateName: 
   animatorLayer: 0
-  disableAnimatorWhileLocked: 1
+  animatorOpenDuration: 1
+  animatorCloseDuration: 1
+  disableAnimatorWhenIdle: 0
+  doorPivot: {fileID: 0}
+  closedLocalEulerAngles: {x: 0, y: 0, z: 0}
+  openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  proceduralOpenDuration: 0.8
+  proceduralCloseDuration: 0.8
+  proceduralCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   player: {fileID: 767234243}
   openDistance: 3
   closeDistance: 4
@@ -14292,11 +14324,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityDoorController
   unlockGate: {fileID: 0}
+  motionMode: 0
   doorAnimator: {fileID: 2094320811}
   openBoolParameter: IsOpen
   closedStateName: 
   animatorLayer: 0
-  disableAnimatorWhileLocked: 1
+  animatorOpenDuration: 1
+  animatorCloseDuration: 1
+  disableAnimatorWhenIdle: 0
+  doorPivot: {fileID: 0}
+  closedLocalEulerAngles: {x: 0, y: 0, z: 0}
+  openLocalEulerAngles: {x: 0, y: 90, z: 0}
+  proceduralOpenDuration: 0.8
+  proceduralCloseDuration: 0.8
+  proceduralCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   player: {fileID: 767234243}
   openDistance: 3
   closeDistance: 4
