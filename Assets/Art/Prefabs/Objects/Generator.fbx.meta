@@ -66,8 +66,8 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: "\u0418\u043A\u043E\u0441\u0444\u0435\u0440\u0430|Work_Generator (1)"
-      takeName: "\u0418\u043A\u043E\u0441\u0444\u0435\u0440\u0430|Work_Generator"
+      name: "\u0418\u043A\u043E\u0441\u0444\u0435\u0440\u0430|Unwork_Generator"
+      takeName: "\u0418\u043A\u043E\u0441\u0444\u0435\u0440\u0430|Unwork_Generator"
       internalID: -149692433763961171
       firstFrame: 0
       lastFrame: 60
@@ -78,7 +78,7 @@ ModelImporter:
       loop: 0
       hasAdditiveReferencePose: 0
       loopTime: 1
-      loopBlend: 0
+      loopBlend: 1
       loopBlendOrientation: 0
       loopBlendPositionY: 0
       loopBlendPositionXZ: 0
@@ -106,8 +106,8 @@ ModelImporter:
       cycleOffset: 0
       loop: 0
       hasAdditiveReferencePose: 0
-      loopTime: 0
-      loopBlend: 0
+      loopTime: 1
+      loopBlend: 1
       loopBlendOrientation: 0
       loopBlendPositionY: 0
       loopBlendPositionXZ: 0

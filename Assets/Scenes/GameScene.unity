@@ -1798,6 +1798,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eb3559d1612453d4a9030b14551423f5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1541015627}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eb3559d1612453d4a9030b14551423f5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1541015629}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: eb3559d1612453d4a9030b14551423f5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1541015628}
     - targetCorrespondingSourceObject: {fileID: -5770634479784780433, guid: eb3559d1612453d4a9030b14551423f5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 406646016}
@@ -11716,7 +11722,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e123aa97118c0a4484588df102e069f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityDoorController
-  unlockGate: {fileID: 0}
+  unlockGate: {fileID: 659531379}
   motionMode: 0
   doorAnimator: {fileID: 2094320811}
   openBoolParameter: IsOpen
@@ -14323,7 +14329,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e123aa97118c0a4484588df102e069f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityDoorController
-  unlockGate: {fileID: 0}
+  unlockGate: {fileID: 852032862}
   motionMode: 0
   doorAnimator: {fileID: 2094320811}
   openBoolParameter: IsOpen
@@ -26888,6 +26894,36 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7acd25572bdade7478684c73d477d6cb, type: 3}
   m_PrefabInstance: {fileID: 1505674677}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1506078774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404228252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5fac0a81ecffb14db79bcd7ab643ccc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GeneratorStateByTasks
+  workGate: {fileID: 1506078775}
+  generatorAnimator: {fileID: 1209142963}
+  isWorkingParameterName: IsWorking
+--- !u!114 &1506078775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404228252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3546234d377da747992ecf64354b82c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskCompletionGate
+  useSpecificTaskIds: 1
+  requiredCompletedCount: 0
+  requiredTaskIds: 06000000
 --- !u!1001 &1513037884
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27692,6 +27728,38 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1541015628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1541015626}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8f77a108853bc54db8cebad31dab631, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PortalStateByTasks
+  activationGate: {fileID: 1541015629}
+  portalAnimator: {fileID: 1541015627}
+  activeParameterName: IsActive
+  portalVisualRoot: {fileID: 0}
+  hidePortalVisualUntilActivated: 0
+--- !u!114 &1541015629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1541015626}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3546234d377da747992ecf64354b82c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TaskCompletionGate
+  useSpecificTaskIds: 1
+  requiredCompletedCount: 0
+  requiredTaskIds: 08000000
 --- !u!1 &1541618040 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8391222552659086748, guid: 90d2b9df9a42a3743bd67bbdb0c7e931, type: 3}
@@ -32578,6 +32646,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Generator
       objectReference: {fileID: 0}
+    - target: {fileID: 7192366935872892961, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -89.8972
+      objectReference: {fileID: 0}
+    - target: {fileID: 7192366935872892961, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 119.9859
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -32585,6 +32661,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1209142963}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1506078775}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1506078774}
     - targetCorrespondingSourceObject: {fileID: 1909189195436533355, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1874408904}
@@ -32594,6 +32676,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8905134256007573587, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1874408902}
+    - targetCorrespondingSourceObject: {fileID: -8905134256007573587, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1874408912}
+    - targetCorrespondingSourceObject: {fileID: -8905134256007573587, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1874408911}
   m_SourcePrefab: {fileID: 100100000, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
 --- !u!4 &1874408898 stripped
 Transform:
@@ -32681,6 +32769,52 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 1787111459094319945, guid: 2747efbb042500b43a0bc1ec6f3616f1, type: 3}
+--- !u!114 &1874408911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1874408899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e721479c3284ac4ba45ed450b976d13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LampStateByTasks
+  stableAfterCompletedTasks: 6
+  flicker: {fileID: 0}
+  targetLight: {fileID: 0}
+  targetRenderer: {fileID: 0}
+  stableLightIntensity: 4
+  stableLightRange: 8
+  stableLightColor: {r: 0.9960785, g: 0.9960785, b: 0.5686275, a: 1}
+  emissionPropertyName: _EmissionColor
+  stableEmissionColor: {r: 0.9960785, g: 0.9960785, b: 0.57254905, a: 1}
+  stableEmissionMultiplier: 3
+  applyStableValuesEveryFrame: 1
+--- !u!114 &1874408912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1874408899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4255c53983ad88479610c3602fadbc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RandomLightFlicker
+  targetLight: {fileID: 0}
+  targetRenderer: {fileID: 0}
+  emissionPropertyName: _EmissionColor
+  baseEmissionColor: {r: 0.9960785, g: 0.9960785, b: 0.57254905, a: 1}
+  minEmissionMultiplier: -7.19
+  maxEmissionMultiplier: 19.5
+  minLightIntensity: 0.1
+  maxLightIntensity: 2.2
+  minInterval: 0.02
+  maxInterval: 0.09
+  smoothSpeed: 20
 --- !u!1001 &1879415477
 PrefabInstance:
   m_ObjectHideFlags: 0
