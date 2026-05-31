@@ -11,6 +11,7 @@ public class UIManager : MonoBehaviour
     public GameObject settingsPanel;
     public GameObject coursesPanel;
     public GameObject tasksPanel;
+    public GameObject courseSelectPanel;
 
     [Header("Optional / child panels")]
     public GameObject taskEditorPanel; 
@@ -55,6 +56,13 @@ public class UIManager : MonoBehaviour
             var tasks = FindObjectOfType<TasksListManager>(true);
             if (tasks != null)
                 tasksPanel = tasks.gameObject;
+        }
+
+        if (courseSelectPanel == null)
+        {
+            var courseSelect = FindObjectOfType<CourseSelectPanelController>(true);
+            if (courseSelect != null)
+                courseSelectPanel = courseSelect.gameObject;
         }
     }
 
@@ -159,6 +167,24 @@ public class UIManager : MonoBehaviour
             adminPasswordPanel.SetActive(true);
             adminPasswordPanel.transform.SetAsLastSibling();
         }
+    }
+
+    public void ShowCourseSelectPanel()
+    {
+        ResolveRuntimePanelReferences();
+
+        var controller = courseSelectPanel != null
+            ? courseSelectPanel.GetComponent<CourseSelectPanelController>()
+            : FindObjectOfType<CourseSelectPanelController>(true);
+
+        if (controller == null)
+        {
+            Debug.LogError("UIManager: courseSelectPanel is not assigned and CourseSelectPanelController was not found in scene.");
+            return;
+        }
+
+        courseSelectPanel = controller.gameObject;
+        controller.OpenPanel();
     }
 
     public void ShowSettingsPanel()

@@ -37,7 +37,7 @@ public class TaskAssignmentManager : MonoBehaviour
 
         SceneNpcRegistry.Instance.BuildIndex();
 
-        var tasks = DataManager.LoadTasks();
+        var tasks = GetTasksForSelectedCourse(DataManager.LoadTasks());
         if (tasks == null || tasks.Count == 0)
         {
             Debug.Log("[TAM] no tasks loaded");
@@ -100,6 +100,42 @@ public class TaskAssignmentManager : MonoBehaviour
 
         // Уведомляем UI один раз о глобальном активном задании (не вызываем с null)
         NotifyGlobalActiveQuestChanged();
+    }
+
+    private List<TaskModel> GetTasksForSelectedCourse(List<TaskModel> allTasks)
+    {
+        if (allTasks == null)
+            return new List<TaskModel>();
+
+        int selectedCourseId = GameState.Instance != null
+            ? GameState.Instance.GetData().selectedCourseId
+            : -1;
+
+        if (selectedCourseId <= 0)
+            return allTasks;
+
+        var courses = DataManager.LoadCourses();
+        var selectedCourse = courses?.courses?.FirstOrDefault(course => course != null && course.id == selectedCourseId);
+
+        if (selectedCourse == null)
+        {
+            Debug.LogWarning($"[TAM] Selected course id={selectedCourseId} was not found. No course tasks will be loaded.");
+            return new List<TaskModel>();
+        }
+
+        if (selectedCourse.taskIds == null || selectedCourse.taskIds.Count == 0)
+        {
+            Debug.LogWarning($"[TAM] Selected course id={selectedCourseId} has no task ids.");
+            return new List<TaskModel>();
+        }
+
+        var taskIds = new HashSet<int>(selectedCourse.taskIds);
+        var filteredTasks = allTasks
+            .Where(task => task != null && taskIds.Contains(task.id))
+            .ToList();
+
+        Debug.Log($"[TAM] Selected course id={selectedCourseId}: loaded {filteredTasks.Count}/{allTasks.Count} task(s).");
+        return filteredTasks;
     }
 
     private void AddToDictQueue(Dictionary<string, List<TaskModel>> dict, string npcGuid, TaskModel task)

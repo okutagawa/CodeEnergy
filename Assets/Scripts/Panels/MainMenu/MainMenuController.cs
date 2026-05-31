@@ -13,6 +13,9 @@ public class MainMenuController : MonoBehaviour
 
     public Button btnAdmin;
 
+    [Header("Panels")]
+    public CourseSelectPanelController courseSelectPanel;
+
     private const string GameSceneName = "GameScene";
 
     private void Start()
@@ -50,12 +53,36 @@ public class MainMenuController : MonoBehaviour
 
     public void OnStartGameClicked()
     {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowCourseSelectPanel();
+            return;
+        }
+
+        var panel = courseSelectPanel != null
+            ? courseSelectPanel
+            : FindObjectOfType<CourseSelectPanelController>(true);
+
+        if (panel != null)
+        {
+            panel.OpenPanel();
+            return;
+        }
+
+        Debug.LogWarning("[MainMenu] Course select panel was not found. Starting a new game without course selection.");
+        StartNewGameWithoutCourse();
+    }
+
+    private static void StartNewGameWithoutCourse()
+    {
         SaveManager.Delete();
+        GameState.EnsureExists();
 
         if (GameState.Instance != null)
         {
             GameState.Instance.ApplyData(new GameStateData());
             GameState.Instance.IsAdminMode = false;
+            GameState.Instance.SaveState();
         }
 
         SceneManager.LoadScene(GameSceneName);

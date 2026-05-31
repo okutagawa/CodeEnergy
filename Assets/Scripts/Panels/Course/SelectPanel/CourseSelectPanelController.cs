@@ -34,20 +34,13 @@ public class CourseSelectPanelController : MonoBehaviour
 
     private CoursesContainer coursesContainer;
     private CourseModel selectedCourse;
+    private bool isStartingGame;
     private readonly List<CourseSelectItem> spawnedItems = new List<CourseSelectItem>();
 
     private void Awake()
     {
-        if (buttonExit != null)
-        {
-            buttonExit.onClick.RemoveAllListeners();
-            buttonExit.onClick.AddListener(ClosePanel);
-        }
-
-        if (descriptionText != null)
-        {
-            descriptionText.text = defaultDescription;
-        }
+        BindButton(buttonExit, ClosePanel);
+        SetDescription(defaultDescription);
     }
 
     private void OnEnable()
@@ -57,33 +50,28 @@ public class CourseSelectPanelController : MonoBehaviour
 
     public void OpenPanel()
     {
+        isStartingGame = false;
+
         if (mainMenuRoot != null)
         {
             mainMenuRoot.SetActive(false);
         }
 
-        if (courseSelectPanel != null)
-        {
-            courseSelectPanel.SetActive(true);
-        }
-        else
-        {
-            gameObject.SetActive(true);
-        }
+        var panel = courseSelectPanel != null ? courseSelectPanel : gameObject;
+        bool wasActive = panel.activeSelf;
+        panel.SetActive(true);
+        panel.transform.SetAsLastSibling();
 
-        RefreshCourses();
+        if (wasActive)
+        {
+            RefreshCourses();
+        }
     }
 
     public void ClosePanel()
     {
-        if (courseSelectPanel != null)
-        {
-            courseSelectPanel.SetActive(false);
-        }
-        else
-        {
-            gameObject.SetActive(false);
-        }
+        var panel = courseSelectPanel != null ? courseSelectPanel : gameObject;
+        panel.SetActive(false);
 
         if (mainMenuRoot != null)
         {
@@ -94,11 +82,13 @@ public class CourseSelectPanelController : MonoBehaviour
     public void RefreshCourses()
     {
         ClearCourseItems();
+        selectedCourse = null;
+        isStartingGame = false;
+        SetDescription(defaultDescription);
 
         SaveService.EnsureWorkingFiles();
 
         coursesContainer = DataManager.LoadCourses();
-        selectedCourse = null;
 
         if (coursesContainer == null || coursesContainer.courses == null || coursesContainer.courses.Count == 0)
         {
@@ -147,17 +137,10 @@ public class CourseSelectPanelController : MonoBehaviour
 
     private void OnCourseSingleClicked(CourseModel course)
     {
-        if (course == null) return;
+        if (course == null || isStartingGame) return;
 
-        selectedCourse = course;
-
-        foreach (CourseSelectItem item in spawnedItems)
-        {
-            if (item == null) continue;
-            item.SetSelected(item.GetCourseId() == selectedCourse.id);
-        }
-
-        SetStatus("Выбран курс: " + selectedCourse.name + ". Нажмите дважды, чтобы начать.", false);
+        SelectCourse(course);
+        SetStatus("Выбран курс: " + GetCourseName(selectedCourse) + ". Нажмите ещё раз, чтобы начать.", false);
     }
 
     private void OnCourseDoubleClicked(CourseModel course)
@@ -168,6 +151,14 @@ public class CourseSelectPanelController : MonoBehaviour
             return;
         }
 
+        if (isStartingGame) return;
+
+        SelectCourse(course);
+        StartNewGameWithCourse(selectedCourse);
+    }
+
+    private void SelectCourse(CourseModel course)
+    {
         selectedCourse = course;
 
         foreach (CourseSelectItem item in spawnedItems)
@@ -175,8 +166,6 @@ public class CourseSelectPanelController : MonoBehaviour
             if (item == null) continue;
             item.SetSelected(item.GetCourseId() == selectedCourse.id);
         }
-
-        StartNewGameWithCourse(selectedCourse);
     }
 
     private void StartNewGameWithCourse(CourseModel course)
@@ -187,14 +176,23 @@ public class CourseSelectPanelController : MonoBehaviour
             return;
         }
 
+        isStartingGame = true;
+        SetItemsInteractable(false);
+        SetStatus("Запускаем курс: " + GetCourseName(course) + "...", false);
+
+        SaveManager.Delete();
+
         GameState.EnsureExists();
 
-        GameStateData newGameData = new GameStateData();
-        newGameData.selectedCourseId = course.id;
+        GameStateData newGameData = new GameStateData
+        {
+            selectedCourseId = course.id
+        };
 
         if (GameState.Instance != null)
         {
             GameState.Instance.ApplyData(newGameData);
+            GameState.Instance.IsAdminMode = false;
             GameState.Instance.SaveState();
         }
         else
@@ -205,6 +203,15 @@ public class CourseSelectPanelController : MonoBehaviour
         Debug.Log("[CourseSelectPanelController] Started new game with course id: " + course.id + ", name: " + course.name);
 
         SceneManager.LoadScene(gameSceneName);
+    }
+
+    private void SetItemsInteractable(bool interactable)
+    {
+        foreach (CourseSelectItem item in spawnedItems)
+        {
+            if (item == null) continue;
+            item.SetInteractable(interactable);
+        }
     }
 
     private void ClearCourseItems()
@@ -220,16 +227,43 @@ public class CourseSelectPanelController : MonoBehaviour
         spawnedItems.Clear();
     }
 
+    private void SetDescription(string message)
+    {
+        if (descriptionText != null)
+        {
+            descriptionText.text = message;
+        }
+    }
+
     private void SetStatus(string message, bool isError)
     {
-        Debug.Log(isError
-            ? "[CourseSelectPanelController] " + message
-            : "[CourseSelectPanelController] " + message);
+        if (isError)
+        {
+            Debug.LogWarning("[CourseSelectPanelController] " + message);
+        }
+        else
+        {
+            Debug.Log("[CourseSelectPanelController] " + message);
+        }
 
         if (statusText != null)
         {
             statusText.text = message;
             statusText.color = isError ? Color.red : Color.white;
         }
+    }
+
+    private static void BindButton(Button button, UnityEngine.Events.UnityAction action)
+    {
+        if (button == null) return;
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(action);
+    }
+
+    private static string GetCourseName(CourseModel course)
+    {
+        return course != null && !string.IsNullOrWhiteSpace(course.name)
+            ? course.name
+            : "Без названия";
     }
 }

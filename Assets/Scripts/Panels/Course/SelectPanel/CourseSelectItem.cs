@@ -21,7 +21,7 @@ public class CourseSelectItem : MonoBehaviour
     private CourseModel course;
     private Action<CourseModel> onSingleClick;
     private Action<CourseModel> onDoubleClick;
-    private float lastClickTime;
+    private float lastClickTime = -1f;
 
     public void Initialize(
         CourseModel courseModel,
@@ -42,7 +42,7 @@ public class CourseSelectItem : MonoBehaviour
         if (taskCountText != null)
         {
             int taskCount = course != null && course.taskIds != null ? course.taskIds.Count : 0;
-            taskCountText.text = taskCount + " заданий";
+            taskCountText.text = FormatTaskCount(taskCount);
         }
 
         if (buttonRoot == null)
@@ -70,9 +70,9 @@ public class CourseSelectItem : MonoBehaviour
 
         float currentTime = Time.unscaledTime;
 
-        if (currentTime - lastClickTime <= doubleClickThreshold)
+        if (lastClickTime > 0f && currentTime - lastClickTime <= doubleClickThreshold)
         {
-            lastClickTime = 0f;
+            lastClickTime = -1f;
             onDoubleClick?.Invoke(course);
         }
         else
@@ -90,6 +90,14 @@ public class CourseSelectItem : MonoBehaviour
         }
     }
 
+    public void SetInteractable(bool interactable)
+    {
+        if (buttonRoot != null)
+        {
+            buttonRoot.interactable = interactable;
+        }
+    }
+
     public int GetCourseId()
     {
         return course != null ? course.id : -1;
@@ -98,5 +106,22 @@ public class CourseSelectItem : MonoBehaviour
     public CourseModel GetCourse()
     {
         return course;
+    }
+
+    private static string FormatTaskCount(int taskCount)
+    {
+        int lastTwoDigits = taskCount % 100;
+        int lastDigit = taskCount % 10;
+
+        if (lastTwoDigits >= 11 && lastTwoDigits <= 14)
+            return taskCount + " заданий";
+
+        if (lastDigit == 1)
+            return taskCount + " задание";
+
+        if (lastDigit >= 2 && lastDigit <= 4)
+            return taskCount + " задания";
+
+        return taskCount + " заданий";
     }
 }
