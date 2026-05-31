@@ -3548,6 +3548,7 @@ MonoBehaviour:
   settingsPanel: {fileID: 1362781742}
   coursesPanel: {fileID: 2122064799}
   tasksPanel: {fileID: 294007068}
+  courseSelectPanel: {fileID: 0}
   taskEditorPanel: {fileID: 950318080}
   editCoursePanel: {fileID: 0}
 --- !u!1 &866137507
@@ -5308,6 +5309,7 @@ MonoBehaviour:
   btnSettings: {fileID: 1841594875}
   btnExit: {fileID: 1588781723}
   btnAdmin: {fileID: 238702893}
+  courseSelectPanel: {fileID: 1759398173}
 --- !u!1 &1215565953
 GameObject:
   m_ObjectHideFlags: 0
@@ -5528,12 +5530,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 3
+    m_Left: 6
     m_Right: 8
-    m_Top: 5
+    m_Top: 6
     m_Bottom: 5
   m_ChildAlignment: 1
-  m_Spacing: 8
+  m_Spacing: 2
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 1
