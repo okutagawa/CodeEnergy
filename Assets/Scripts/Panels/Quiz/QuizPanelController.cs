@@ -51,7 +51,7 @@ public class QuizPanelController : MonoBehaviour
         _isMulti = task != null && task.correctAnswerIndexes != null && task.correctAnswerIndexes.Count > 1;
 
         if (titleText != null) titleText.text = task?.title ?? "";
-        if (bodyText != null) bodyText.text = task?.textForReceiver ?? "";
+        if (bodyText != null) bodyText.text = !string.IsNullOrEmpty(task?.questionText) ? task.questionText : (task?.textForReceiver ?? "");
 
         ClearCards();
         CreateCards(task?.answers ?? new List<string>());
@@ -144,7 +144,7 @@ public class QuizPanelController : MonoBehaviour
             TaskAssignmentManager.Instance?.ExportQueuesToGameState();
         }
 
-        if (_task != null && _task.hasStars)
+        if (_task != null && _task.rewardEnabled)
         {
             int failedAttempts = gameState.GetFailedQuizAttempts(_task.taskId);
             float duration = Mathf.Max(0f, Time.unscaledTime - _openedAtUnscaledTime);
@@ -173,13 +173,18 @@ public class QuizPanelController : MonoBehaviour
     {
         int safeFails = Mathf.Max(0, failedAttemptsBeforeSuccess);
 
+        int maxStars = _task != null ? Mathf.Clamp(_task.maxStars <= 0 ? 3 : _task.maxStars, 1, 3) : 3;
+        float threshold = _task != null && _task.timeLimitSeconds > 0f ? _task.timeLimitSeconds : fastCompletionThresholdSeconds;
+
+        int stars;
         if (safeFails >= 2)
-            return 1;
+            stars = 1;
+        else if (safeFails == 1)
+            stars = 2;
+        else
+            stars = completionSeconds <= threshold ? 3 : 2;
 
-        if (safeFails == 1)
-            return 2;
-
-        return completionSeconds <= fastCompletionThresholdSeconds ? 3 : 2;
+        return Mathf.Clamp(stars, 1, maxStars);
     }
 
     private void HandleNext()

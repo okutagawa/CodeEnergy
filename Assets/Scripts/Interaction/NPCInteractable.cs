@@ -29,7 +29,7 @@ public class NPCInteractable : MonoBehaviour
             return;
         }
 
-        if (_peekReceiverTask != null && !string.IsNullOrEmpty(_peekReceiverTask.textForReceiver))
+        if (_peekReceiverTask != null && (!string.IsNullOrEmpty(_peekReceiverTask.questionText) || !string.IsNullOrEmpty(_peekReceiverTask.textForReceiver)))
         {
             var quizPanel = quizPanelReference != null ? quizPanelReference : FindObjectOfType<QuizPanelController>();
             if (quizPanel == null)
@@ -45,9 +45,14 @@ public class NPCInteractable : MonoBehaviour
                 taskId = _peekReceiverTask.id,
                 title = _peekReceiverTask.title,
                 textForReceiver = _peekReceiverTask.textForReceiver,
+                questionText = _peekReceiverTask.questionText,
                 answers = _peekReceiverTask.answers != null ? new System.Collections.Generic.List<string>(_peekReceiverTask.answers) : new System.Collections.Generic.List<string>(),
                 correctAnswerIndexes = _peekReceiverTask.correctAnswerIndexes != null ? new System.Collections.Generic.List<int>(_peekReceiverTask.correctAnswerIndexes) : new System.Collections.Generic.List<int>(),
-                hasStars = _peekReceiverTask.hasStars
+                hasStars = _peekReceiverTask.hasStars,
+                rewardEnabled = _peekReceiverTask.rewardEnabled,
+                maxStars = _peekReceiverTask.maxStars,
+                timeLimitSeconds = _peekReceiverTask.timeLimitSeconds,
+                worldEvent = _peekReceiverTask.worldEvent
             };
 
             quizPanel.Show(quizTask, this);

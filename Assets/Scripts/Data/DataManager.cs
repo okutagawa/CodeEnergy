@@ -73,9 +73,11 @@ namespace MyGame.Data
                 }
 
                 var wrapper = JsonUtility.FromJson<TaskListWrapper>(json);
-                var count = wrapper?.tasks?.Count ?? 0;
+                var tasks = wrapper?.tasks ?? new List<TaskModel>();
+                NormalizeTaskDefaults(tasks, !json.Contains("\"rewardEnabled\""));
+                var count = tasks.Count;
                 Debug.Log($"DataManager.LoadTasks: loaded {count} task(s)");
-                return wrapper?.tasks ?? new List<TaskModel>();
+                return tasks;
             }
             catch (System.Exception ex)
             {
@@ -96,6 +98,7 @@ namespace MyGame.Data
                     Directory.CreateDirectory(dir);
 
                 var safeTasks = tasks ?? new List<TaskModel>();
+                NormalizeTaskDefaults(safeTasks);
                 Debug.Log($"DataManager.SaveTasks called. tasks.Count={safeTasks.Count}, path={TasksFilePath}");
 
                 var wrapper = new TaskListWrapper { tasks = safeTasks };
@@ -109,6 +112,54 @@ namespace MyGame.Data
             {
                 Debug.LogError("DataManager.SaveTasks: exception saving tasks.json -> " + ex);
             }
+        }
+
+        public static void NormalizeTaskDefaults(List<TaskModel> tasks)
+        {
+            NormalizeTaskDefaults(tasks, false);
+        }
+
+        public static void NormalizeTaskDefaults(List<TaskModel> tasks, bool useLegacyRewardDefault)
+        {
+            if (tasks == null) return;
+
+            foreach (var task in tasks)
+            {
+                NormalizeTaskDefaults(task, useLegacyRewardDefault);
+            }
+        }
+
+        public static void NormalizeTaskDefaults(TaskModel task)
+        {
+            NormalizeTaskDefaults(task, false);
+        }
+
+        public static void NormalizeTaskDefaults(TaskModel task, bool useLegacyRewardDefault)
+        {
+            if (task == null) return;
+
+            if (task.answers == null) task.answers = new List<string>();
+            if (task.correctAnswerIndexes == null) task.correctAnswerIndexes = new List<int>();
+
+            if (task.answerCount <= 0)
+                task.answerCount = task.answers.Count > 0 ? task.answers.Count : 4;
+
+            task.answerCount = Mathf.Clamp(task.answerCount, 2, 5);
+
+            if (task.maxStars <= 0) task.maxStars = 3;
+            task.maxStars = Mathf.Clamp(task.maxStars, 1, 3);
+
+            if (task.timeLimitSeconds <= 0f) task.timeLimitSeconds = 60f;
+            if (string.IsNullOrEmpty(task.worldEvent)) task.worldEvent = "None";
+
+            // Old JSON files did not have rewardEnabled. For those files, default rewards to enabled.
+            if (useLegacyRewardDefault) task.rewardEnabled = true;
+            task.hasStars = task.rewardEnabled;
+
+            task.correctAnswerIndexes = task.correctAnswerIndexes
+                .Where(index => index >= 0 && index < task.answerCount)
+                .Distinct()
+                .ToList();
         }
 
         // ¬спомогательна€ оболочка, поскольку Unity JsonUtility не поддерживает списки верхнего уровн€.

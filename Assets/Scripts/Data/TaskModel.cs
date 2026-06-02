@@ -21,6 +21,10 @@ namespace MyGame.Models
         // Диалог / текст, отображаемый для получателя NPC
         public string textForReceiver;
 
+        public string questionText;
+
+        public int answerCount = 4;
+
         // Варианты ответов (непустые строки). Порядок имеет значение.
         public List<string> answers = new List<string>();
 
@@ -29,5 +33,12 @@ namespace MyGame.Models
 
         // за выполнение этого задания начисляются звёзды
         public bool hasStars = false;
+
+        // New reward settings.
+        public bool rewardEnabled = true;
+        public int maxStars = 3;
+        public float timeLimitSeconds = 60f;
+
+        public string worldEvent = "None";
     }
 }
