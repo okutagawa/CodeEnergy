@@ -89,7 +89,7 @@ public class TaskEditorController : MonoBehaviour
     private void Awake()
     {
         TryAutoAssignUiRefs();
-        SetupStaticDropdowns();
+        SetupStaticDropdownOptions(false);
         BindButtons();
         BindAnswerCountDropdown();
         DisableLegacyInputExpander();
@@ -126,7 +126,7 @@ public class TaskEditorController : MonoBehaviour
         editingTaskId = -1;
 
         PopulateNpcDropdowns();
-        SetupStaticDropdowns();
+        SetupStaticDropdownOptions(true);
         ClearFormFields(DataManager.GetNextTaskIdForCourse(allTasks, contextCourseId, coursesContainer));
 
         var course = coursesContainer?.courses?.Find(c => c.id == courseId);
@@ -155,7 +155,7 @@ public class TaskEditorController : MonoBehaviour
         isEditing = true;
         editingTaskId = model.id;
         PopulateNpcDropdowns();
-        SetupStaticDropdowns();
+        SetupStaticDropdownOptions(false);
         FillForm(model);
 
         if (titleText != null) titleText.text = $"Редактирование задания: {model.title} (id={model.id})";
@@ -188,23 +188,31 @@ public class TaskEditorController : MonoBehaviour
         if (dropdownAnswersCount == null) return;
         dropdownAnswersCount.onValueChanged.RemoveListener(OnAnswersCountChanged);
         dropdownAnswersCount.onValueChanged.AddListener(OnAnswersCountChanged);
-        UpdateAnswerRows(GetSelectedAnswerCount());
+        ApplyAnswerCount(GetSelectedAnswerCount());
     }
 
-    private void SetupStaticDropdowns()
+    private void SetupStaticDropdownOptions(bool applyDefaults)
     {
         if (dropdownAnswersCount != null)
         {
             dropdownAnswersCount.ClearOptions();
             dropdownAnswersCount.AddOptions(new List<string> { "2", "3", "4", "5" });
-            if (dropdownAnswersCount.value < 0 || dropdownAnswersCount.value > 3) dropdownAnswersCount.value = 0;
+            if (applyDefaults)
+            {
+                dropdownAnswersCount.SetValueWithoutNotify(0);
+            }
+            else
+            {
+                dropdownAnswersCount.SetValueWithoutNotify(Mathf.Clamp(dropdownAnswersCount.value, 0, MaxAnswerCount - MinAnswerCount));
+            }
             dropdownAnswersCount.RefreshShownValue();
         }
         if (dropdownMaxStars != null)
         {
             dropdownMaxStars.ClearOptions();
             dropdownMaxStars.AddOptions(new List<string> { "1", "2", "3" });
-            dropdownMaxStars.value = 2;
+            if (applyDefaults) dropdownMaxStars.SetValueWithoutNotify(2);
+            else dropdownMaxStars.SetValueWithoutNotify(Mathf.Clamp(dropdownMaxStars.value, 0, 2));
             dropdownMaxStars.RefreshShownValue();
         }
 
@@ -212,7 +220,8 @@ public class TaskEditorController : MonoBehaviour
         {
             dropdownWorldEvent.ClearOptions();
             dropdownWorldEvent.AddOptions(WorldEventLabels.ToList());
-            dropdownWorldEvent.value = 0;
+            if (applyDefaults) dropdownWorldEvent.SetValueWithoutNotify(0);
+            else dropdownWorldEvent.SetValueWithoutNotify(Mathf.Clamp(dropdownWorldEvent.value, 0, WorldEventLabels.Length - 1));
             dropdownWorldEvent.RefreshShownValue();
         }
     }
@@ -387,8 +396,12 @@ public class TaskEditorController : MonoBehaviour
         if (inputSecondNPCText != null) inputSecondNPCText.text = model.textForReceiver ?? "";
         if (inputQuestionText != null) inputQuestionText.text = model.questionText ?? model.textForReceiver ?? "";
 
-        var answerCount = Mathf.Clamp(model.answerCount > 0 ? model.answerCount : (model.answers?.Count ?? 4), MinAnswerCount, MaxAnswerCount);
-        SetAnswersCount(answerCount);
+        var savedAnswersCount = model.answers != null ? model.answers.Count : 0;
+        var answerCount = model.answerCount > 0 ? model.answerCount : savedAnswersCount;
+        answerCount = Mathf.Clamp(answerCount, MinAnswerCount, MaxAnswerCount);
+        var worldEvent = WorldEventKey.Normalize(model.worldEvent);
+        Debug.Log($"[TaskEditor] Loading task id={model.id}, answerCount={model.answerCount}, answers.Count={savedAnswersCount}, worldEvent={worldEvent}");
+        RestoreAnswersCount(answerCount);
 
         var inputs = AnswerInputs;
         var toggles = CorrectToggles;
@@ -401,7 +414,8 @@ public class TaskEditorController : MonoBehaviour
         if (toggleRewardEnabled != null) toggleRewardEnabled.isOn = model.rewardEnabled;
         SetMaxStars(model.maxStars);
         if (inputTimeLimit != null) inputTimeLimit.text = model.timeLimitSeconds.ToString(CultureInfo.InvariantCulture);
-        SetWorldEvent(model.worldEvent);
+        RestoreWorldEvent(worldEvent);
+        Debug.Log($"[TaskEditor] UI restored answerDropdown={(dropdownAnswersCount != null ? dropdownAnswersCount.value : -1)}, worldEventDropdown={(dropdownWorldEvent != null ? dropdownWorldEvent.value : -1)}");
     }
 
     private void ClearFormFields(int nextTaskId)
@@ -452,7 +466,19 @@ public class TaskEditorController : MonoBehaviour
             dropdownAnswersCount.RefreshShownValue();
         }
 
-        UpdateAnswerRows(count);
+        ApplyAnswerCount(count);
+    }
+
+    private void RestoreAnswersCount(int count)
+    {
+        count = Mathf.Clamp(count, MinAnswerCount, MaxAnswerCount);
+        if (dropdownAnswersCount != null)
+        {
+            dropdownAnswersCount.SetValueWithoutNotify(count - MinAnswerCount);
+            dropdownAnswersCount.RefreshShownValue();
+        }
+
+        ApplyAnswerCount(count);
     }
 
     private int GetSelectedAnswerCount()
@@ -463,7 +489,12 @@ public class TaskEditorController : MonoBehaviour
 
     private void OnAnswersCountChanged(int _)
     {
-        UpdateAnswerRows(GetSelectedAnswerCount());
+        ApplyAnswerCount(GetSelectedAnswerCount());
+    }
+
+    private void ApplyAnswerCount(int answerCount)
+    {
+        UpdateAnswerRows(answerCount);
     }
 
     private void UpdateAnswerRows(int answerCount)
@@ -498,6 +529,17 @@ public class TaskEditorController : MonoBehaviour
         if (dropdownWorldEvent != null)
         {
             dropdownWorldEvent.value = idx;
+            dropdownWorldEvent.RefreshShownValue();
+        }
+    }
+
+    private void RestoreWorldEvent(string worldEvent)
+    {
+        var idx = WorldEventKey.IndexOf(worldEvent);
+        if (idx < 0) idx = 0;
+        if (dropdownWorldEvent != null)
+        {
+            dropdownWorldEvent.SetValueWithoutNotify(idx);
             dropdownWorldEvent.RefreshShownValue();
         }
     }
