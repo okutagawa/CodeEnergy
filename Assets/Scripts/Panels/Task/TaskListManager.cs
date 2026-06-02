@@ -193,9 +193,6 @@ public class TasksListManager : MonoBehaviour
             return;
         }
 
-        // Подготовить редактор к работе
-        editor.OpenForCourseEditor(currentCourse.id);
-
         // Показать панель редактора через UIManager, если назначено
         if (UIManager.Instance != null)
         {
@@ -208,6 +205,7 @@ public class TasksListManager : MonoBehaviour
                 UIManager.Instance.ShowOnly(UIManager.Instance.tasksPanel);
             }
         }
+        editor.OpenForCourseEditor(currentCourse.id);
     }
 
     private void OnDeleteTaskClicked()
@@ -246,14 +244,14 @@ public class TasksListManager : MonoBehaviour
         {
             Debug.LogError("TasksListManager: TaskEditorController not found for edit");
             return;
-        }
-
-        editor.OpenForEdit(task);
+        }       
 
         if (UIManager.Instance != null && UIManager.Instance.taskEditorPanel != null)
             UIManager.Instance.ShowOnly(UIManager.Instance.taskEditorPanel);
         else if (UIManager.Instance != null)
             UIManager.Instance.ShowOnly(UIManager.Instance.tasksPanel); // fallback
+
+        editor.OpenForEdit(task);
     }
 
     private void OnSaveClicked()

@@ -149,17 +149,19 @@ public class TaskEditorController : MonoBehaviour
         // Попытаемся определить courseId, если он не передан явно
         coursesContainer = DataManager.LoadCourses();
         allTasks = DataManager.LoadTasks();
-        DataManager.NormalizeTaskDefaults(model);
+        var courseId = FindCourseIdForTask(model.id);
+        var persistedModel = FindTaskForCourse(model.id, courseId) ?? model;
+        DataManager.NormalizeTaskDefaults(persistedModel);
 
-        contextCourseId = FindCourseIdForTask(model.id);
+        contextCourseId = courseId > 0 ? courseId : FindCourseIdForTask(persistedModel.id);
         isEditing = true;
-        editingTaskId = model.id;
+        editingTaskId = persistedModel.id;
         PopulateNpcDropdowns();
         SetupStaticDropdownOptions(false);
-        FillForm(model);
+        FillForm(persistedModel);
 
-        if (titleText != null) titleText.text = $"Редактирование задания: {model.title} (id={model.id})";
-        Debug.Log($"[TaskEditor] Open edit form for taskId={model.id}, courseId={contextCourseId}");
+        if (titleText != null) titleText.text = $" : {persistedModel.title} (id={persistedModel.id})";
+        Debug.Log($"[TaskEditor] Open edit form for taskId={persistedModel.id}, courseId={contextCourseId}");
     }
 
     private void BindButtons()
