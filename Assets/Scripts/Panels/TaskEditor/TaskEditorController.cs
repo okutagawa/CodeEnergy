@@ -4,7 +4,6 @@ using System.Linq;
 using MyGame.Data;
 using MyGame.Models;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class TaskEditorController : MonoBehaviour
@@ -99,11 +98,11 @@ public class TaskEditorController : MonoBehaviour
 
     private void Awake()
     {
+        TryAutoAssignUiRefs();
         SetupStaticDropdowns();
         BindButtons();
         BindAnswerCountDropdown();
-        SetupExpander(inputFieldExpander);
-        TryAutoAssignUiRefs();
+        DisableLegacyInputExpander();
     }
 
     // загрузка существующих заданий и отображения строк
@@ -138,7 +137,7 @@ public class TaskEditorController : MonoBehaviour
 
         PopulateNpcDropdowns();
         SetupStaticDropdowns();
-        ClearFormFields(DataManager.GetNextTaskId(allTasks));
+        ClearFormFields(DataManager.GetNextTaskIdForCourse(allTasks, contextCourseId, coursesContainer));
 
         var course = coursesContainer?.courses?.Find(c => c.id == courseId);
         if (titleText != null) titleText.text = course != null ? $"Создание задания: {course.name}" : "Создание задания";
@@ -266,6 +265,7 @@ public class TaskEditorController : MonoBehaviour
         buttonSaveTask = buttonSaveTask ?? FindButton("ButtonSaveTask");
         buttonClearForm = buttonClearForm ?? FindButton("ButtonClearForm");
         buttonBack = buttonBack ?? FindButton("ButtonBack");
+        inputFieldExpander = inputFieldExpander ?? GetComponentInChildren<InputFieldExpander>(true);
     }
 
     private bool EnsureUiReady(string caller)
@@ -545,13 +545,18 @@ public class TaskEditorController : MonoBehaviour
             return;
         }
 
-        var model = isEditing ? allTasks.FirstOrDefault(t => t.id == editingTaskId) : null;
+        var model = isEditing ? FindTaskForCourse(editingTaskId, contextCourseId) : null;
         if (model == null)
         {
-            model = new TaskModel { id = isEditing && editingTaskId > 0 ? editingTaskId : DataManager.GetNextTaskId(allTasks) };
+            var nextId = isEditing && editingTaskId >= 0
+                ? editingTaskId
+                : DataManager.GetNextTaskIdForCourse(allTasks, contextCourseId, coursesContainer);
+
+            model = new TaskModel { id = nextId, courseId = contextCourseId };
             allTasks.Add(model);
         }
 
+        model.courseId = contextCourseId;
         ApplyFormToModel(model);
 
         if (course.taskIds == null) course.taskIds = new List<int>();
@@ -631,6 +636,7 @@ public class TaskEditorController : MonoBehaviour
         var inputs = AnswerInputs;
         var toggles = CorrectToggles;
 
+        model.courseId = contextCourseId;
         model.title = inputTaskTitle != null ? inputTaskTitle.text.Trim() : "";
         model.giverNpcGuid = GetSelectedGuid(dropdownGiverNPC, giverOptionGuids);
         model.receiverNpcGuid = GetSelectedGuid(dropdownReceiverNPC, receiverOptionGuids);
@@ -669,9 +675,24 @@ public class TaskEditorController : MonoBehaviour
     private int FindCourseIdForTask(int taskId)
     {
         if (coursesContainer == null) coursesContainer = DataManager.LoadCourses();
+
+        var taskWithCourse = allTasks?.FirstOrDefault(t => t != null && t.id == taskId && t.courseId > 0);
+        if (taskWithCourse != null) return taskWithCourse.courseId;
+
         var course = coursesContainer?.courses?.FirstOrDefault(c => c.taskIds != null && c.taskIds.Contains(taskId));
         return course != null ? course.id : -1;
     }
+
+    private TaskModel FindTaskForCourse(int taskId, int courseId)
+    {
+        if (allTasks == null) return null;
+
+        var task = allTasks.FirstOrDefault(t => t != null && t.id == taskId && t.courseId == courseId);
+        if (task != null) return task;
+
+        return allTasks.FirstOrDefault(t => t != null && t.id == taskId && t.courseId <= 0);
+    }
+
 
     private void OnClearFormClicked()
     {
@@ -679,7 +700,7 @@ public class TaskEditorController : MonoBehaviour
         isEditing = false;
         editingTaskId = -1;
         allTasks = DataManager.LoadTasks();
-        ClearFormFields(DataManager.GetNextTaskId(allTasks));
+        ClearFormFields(DataManager.GetNextTaskIdForCourse(allTasks, contextCourseId, coursesContainer));
         if (titleText != null) titleText.text = "Создание задания";
         Debug.Log($"[TaskEditor] Create form cleared for courseId={contextCourseId}");
     }
@@ -713,26 +734,11 @@ public class TaskEditorController : MonoBehaviour
         }
     }
 
-    private void SetupExpander(InputFieldExpander expander)
+    private void DisableLegacyInputExpander()
     {
-        if (expander == null) return;
-        foreach (var input in new[] { inputTaskTitle, inputFirstNPCText, inputSecondNPCText, inputQuestionText, inputAnswer1, inputAnswer2, inputAnswer3, inputAnswer4, inputAnswer5 })
-        {
-            AddExpanderTrigger(input, expander);
-        }
-    }
+        if (inputFieldExpander == null) return;
 
-    private void AddExpanderTrigger(InputField field, InputFieldExpander expander)
-    {
-        if (field == null || expander == null) return;
-        var trigger = field.GetComponent<EventTrigger>() ?? field.gameObject.AddComponent<EventTrigger>();
-
-        var clickEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
-        clickEntry.callback.AddListener(_ => expander.Expand(field));
-        trigger.triggers.Add(clickEntry);
-
-        var selectEntry = new EventTrigger.Entry { eventID = EventTriggerType.Select };
-        selectEntry.callback.AddListener(_ => expander.Expand(field));
-        trigger.triggers.Add(selectEntry);
+        inputFieldExpander.gameObject.SetActive(false);
+        inputFieldExpander = null;
     }
 }

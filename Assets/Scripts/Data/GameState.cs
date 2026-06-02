@@ -9,6 +9,8 @@ public class GameState : MonoBehaviour
 
     public static event Action<int> OnTaskCompleted;
 
+    public static event Action<string> OnWorldEventCompleted;
+
     public bool IsAdminMode = false;
 
     private GameStateData _data;
@@ -61,12 +63,27 @@ public class GameState : MonoBehaviour
     // ----- task helpers -----
     public void MarkTaskCompleted(int taskId)
     {
+        MarkTaskCompleted(taskId, null);
+    }
+
+    public void MarkTaskCompleted(int taskId, string worldEvent)
+    {
         var d = GetData();
+        if (d.completedWorldEvents == null) d.completedWorldEvents = new System.Collections.Generic.List<string>();
+
         bool isNew = !d.completedTaskIds.Contains(taskId);
         if (isNew)
         {
             d.completedTaskIds.Add(taskId);
         }
+
+        bool hasWorldEvent = !string.IsNullOrWhiteSpace(worldEvent) && worldEvent != "None";
+        bool isNewWorldEvent = hasWorldEvent && !d.completedWorldEvents.Contains(worldEvent);
+        if (isNewWorldEvent)
+        {
+            d.completedWorldEvents.Add(worldEvent);
+        }
+
         d.startedTaskIds.Remove(taskId);
         SaveState();
 
@@ -78,9 +95,28 @@ public class GameState : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[GameState] Exception in OntaskCompleted: {ex}");
+                Debug.LogError($"[GameState] Exception in OnTaskCompleted: {ex}");
             }
         }
+
+        if (isNewWorldEvent)
+        {
+            try
+            {
+                OnWorldEventCompleted?.Invoke(worldEvent);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[GameState] Exception in OnWorldEventCompleted: {ex}");
+            }
+        }
+    }
+
+    public bool IsWorldEventCompleted(string worldEvent)
+    {
+        if (string.IsNullOrWhiteSpace(worldEvent) || worldEvent == "None") return false;
+        var events = GetData().completedWorldEvents;
+        return events != null && events.Contains(worldEvent);
     }
 
     public void MarkTaskStarted(int taskId)

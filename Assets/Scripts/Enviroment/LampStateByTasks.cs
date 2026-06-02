@@ -5,6 +5,7 @@ public class LampStateByTasks : MonoBehaviour
 {
     [Header("Required progress")]
     [SerializeField] private int stableAfterCompletedTasks = 2;
+    [SerializeField] private string stableWorldEvent = "FixLanterns";
 
     [Header("References")]
     [SerializeField] private RandomLightFlicker flicker;
@@ -42,12 +43,14 @@ public class LampStateByTasks : MonoBehaviour
     private void OnEnable()
     {
         GameState.OnTaskCompleted += HandleTaskCompleted;
+        GameState.OnWorldEventCompleted += HandleWorldEventCompleted;
         RefreshState();
     }
 
     private void OnDisable()
     {
         GameState.OnTaskCompleted -= HandleTaskCompleted;
+        GameState.OnWorldEventCompleted -= HandleWorldEventCompleted;
     }
 
     private void Update()
@@ -59,6 +62,12 @@ public class LampStateByTasks : MonoBehaviour
     private void HandleTaskCompleted(int taskId)
     {
         RefreshState();
+    }
+
+    private void HandleWorldEventCompleted(string worldEvent)
+    {
+        if (string.IsNullOrEmpty(stableWorldEvent) || worldEvent == stableWorldEvent)
+            RefreshState();
     }
 
     private void RefreshState()
@@ -94,7 +103,8 @@ public class LampStateByTasks : MonoBehaviour
     {
         if (GameState.Instance == null)
             return false;
-
+        if (GameState.Instance.IsWorldEventCompleted(stableWorldEvent))
+            return true;
         return GameState.Instance.GetData().completedTaskIds.Count >= Mathf.Max(0, stableAfterCompletedTasks);
     }
 }

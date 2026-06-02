@@ -7,6 +7,7 @@ namespace MyGame.Models
     public class TaskModel
     {
         public int id;
+        public int courseId = -1;
         public string title;
 
         // NPC, который даёт задание (имя или идентификатор)

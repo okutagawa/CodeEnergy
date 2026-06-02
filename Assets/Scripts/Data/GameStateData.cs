@@ -10,6 +10,7 @@ public class GameStateData
     public int selectedCourseId = -1;
 
     public List<int> completedTaskIds = new List<int>();
+    public List<string> completedWorldEvents = new List<string>();
     public List<int> startedTaskIds = new List<int>();
 
     [Serializable]

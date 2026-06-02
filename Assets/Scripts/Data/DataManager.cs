@@ -140,6 +140,7 @@ namespace MyGame.Data
 
             if (task.answers == null) task.answers = new List<string>();
             if (task.correctAnswerIndexes == null) task.correctAnswerIndexes = new List<int>();
+            if (task.worldEvent == null) task.worldEvent = "None";
 
             if (task.answerCount <= 0)
                 task.answerCount = task.answers.Count > 0 ? task.answers.Count : 4;
@@ -173,6 +174,31 @@ namespace MyGame.Data
             if (tasks == null || tasks.Count == 0) return 1;
             var max = tasks.Where(t => t != null && t.id > 0).Select(t => t.id).DefaultIfEmpty(0).Max();
             return max + 1;
+        }
+
+        public static int GetNextTaskIdForCourse(List<TaskModel> tasks, int courseId, CoursesContainer coursesContainer)
+        {
+            if (tasks == null) tasks = new List<TaskModel>();
+
+            var course = coursesContainer?.courses?.FirstOrDefault(c => c != null && c.id == courseId);
+            var idsInCourse = new HashSet<int>();
+
+            foreach (var task in tasks)
+            {
+                if (task != null && task.courseId == courseId && task.id >= 0)
+                    idsInCourse.Add(task.id);
+            }
+
+            if (course?.taskIds != null)
+            {
+                foreach (var id in course.taskIds)
+                {
+                    if (id >= 0 && tasks.Any(task => task != null && task.id == id && (task.courseId == courseId || task.courseId <= 0)))
+                        idsInCourse.Add(id);
+                }
+            }
+
+            return idsInCourse.Count == 0 ? 0 : idsInCourse.Max() + 1;
         }
     }
 }

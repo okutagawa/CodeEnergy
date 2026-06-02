@@ -64,6 +64,13 @@ public class UIManager : MonoBehaviour
             if (courseSelect != null)
                 courseSelectPanel = courseSelect.gameObject;
         }
+
+        if (taskEditorPanel == null)
+        {
+            var taskEditor = FindObjectOfType<TaskEditorController>(true);
+            if (taskEditor != null)
+                taskEditorPanel = taskEditor.gameObject;
+        }
     }
 
     private void Awake()
