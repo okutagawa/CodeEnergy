@@ -139,8 +139,10 @@ public class QuizPanelController : MonoBehaviour
 
         if (_task != null)
         {
-            GameState.Instance.MarkTaskCompleted(_task.taskId);
-            Debug.Log($"[DEBUG] Marked completed task {_task.taskId}. Completed count={GameState.Instance.GetData().completedTaskIds.Count}");
+            var worldEvent = WorldEventKey.Normalize(_task.worldEvent);
+            Debug.Log($"[Quiz] Complete task id={_task.taskId}, worldEvent={worldEvent}");
+            gameState.MarkTaskCompleted(_task.taskId, worldEvent);
+            Debug.Log($"[DEBUG] Marked completed task {_task.taskId}. Completed count={gameState.GetData().completedTaskIds.Count}");
             TaskAssignmentManager.Instance?.ExportQueuesToGameState();
         }
 

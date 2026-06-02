@@ -5,6 +5,7 @@ public class PortalStateByTasks : MonoBehaviour
 {
     [Header("Required progress")]
     [SerializeField] private TaskCompletionGate activationGate;
+    [SerializeField] private string activationWorldEvent = WorldEventKey.ActivatePortal;
 
     [Header("Portal animation")]
     [SerializeField] private Animator portalAnimator;
@@ -28,6 +29,7 @@ public class PortalStateByTasks : MonoBehaviour
     private void OnEnable()
     {
         GameState.OnTaskCompleted += HandleTaskCompleted;
+        GameState.OnWorldEventCompleted += HandleWorldEventCompleted;
         RefreshState();
     }
 
@@ -39,6 +41,7 @@ public class PortalStateByTasks : MonoBehaviour
     private void OnDisable()
     {
         GameState.OnTaskCompleted -= HandleTaskCompleted;
+        GameState.OnWorldEventCompleted -= HandleWorldEventCompleted;
     }
 
     private void HandleTaskCompleted(int taskId)
@@ -46,9 +49,15 @@ public class PortalStateByTasks : MonoBehaviour
         RefreshState();
     }
 
+    private void HandleWorldEventCompleted(string worldEvent)
+    {
+        if (WorldEventKey.Normalize(worldEvent) == WorldEventKey.Normalize(activationWorldEvent))
+            RefreshState();
+    }
+
     private void RefreshState()
     {
-        bool shouldBeActive = activationGate != null && activationGate.IsUnlocked();
+        bool shouldBeActive = (activationGate != null && activationGate.IsUnlocked()) || IsWorldEventCompleted(activationWorldEvent);
 
         if (_isActive == shouldBeActive)
         {
@@ -58,6 +67,11 @@ public class PortalStateByTasks : MonoBehaviour
 
         _isActive = shouldBeActive;
         ApplyState();
+    }
+
+    private bool IsWorldEventCompleted(string worldEvent)
+    {
+        return GameState.Instance != null && GameState.Instance.IsWorldEventCompleted(worldEvent);
     }
 
     private void ApplyState()

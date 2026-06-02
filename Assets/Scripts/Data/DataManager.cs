@@ -2,6 +2,7 @@ using UnityEngine;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using MyGame.Models;
 
 namespace MyGame.Data
@@ -74,6 +75,12 @@ namespace MyGame.Data
 
                 var wrapper = JsonUtility.FromJson<TaskListWrapper>(json);
                 var tasks = wrapper?.tasks ?? new List<TaskModel>();
+                var taskIdsMissingAnswerCount = GetTaskIdsMissingField(json, "answerCount");
+                foreach (var task in tasks)
+                {
+                    if (task != null && taskIdsMissingAnswerCount.Contains(task.id))
+                        task.answerCount = 0;
+                }
                 NormalizeTaskDefaults(tasks, !json.Contains("\"rewardEnabled\""));
                 var count = tasks.Count;
                 Debug.Log($"DataManager.LoadTasks: loaded {count} task(s)");
@@ -140,7 +147,7 @@ namespace MyGame.Data
 
             if (task.answers == null) task.answers = new List<string>();
             if (task.correctAnswerIndexes == null) task.correctAnswerIndexes = new List<int>();
-            if (task.worldEvent == null) task.worldEvent = "None";
+            task.worldEvent = WorldEventKey.Normalize(task.worldEvent);
 
             if (task.answerCount <= 0)
                 task.answerCount = task.answers.Count > 0 ? task.answers.Count : 4;
@@ -151,7 +158,7 @@ namespace MyGame.Data
             task.maxStars = Mathf.Clamp(task.maxStars, 1, 3);
 
             if (task.timeLimitSeconds <= 0f) task.timeLimitSeconds = 60f;
-            if (string.IsNullOrEmpty(task.worldEvent)) task.worldEvent = "None";
+            task.worldEvent = WorldEventKey.Normalize(task.worldEvent);
 
             // Old JSON files did not have rewardEnabled. For those files, default rewards to enabled.
             if (useLegacyRewardDefault) task.rewardEnabled = true;
@@ -162,6 +169,30 @@ namespace MyGame.Data
                 .Distinct()
                 .ToList();
         }
+
+        private static HashSet<int> GetTaskIdsMissingField(string json, string fieldName)
+        {
+            var result = new HashSet<int>();
+            if (string.IsNullOrWhiteSpace(json) || string.IsNullOrWhiteSpace(fieldName))
+                return result;
+
+            var taskMatches = Regex.Matches(json, @"\{[^{}]*""id""\s*:\s*(-?\d+)[^{}]*\}");
+            foreach (Match match in taskMatches)
+            {
+                if (!match.Success || match.Groups.Count < 2)
+                    continue;
+
+                var taskJson = match.Value;
+                if (taskJson.Contains($"\"{fieldName}\""))
+                    continue;
+
+                if (int.TryParse(match.Groups[1].Value, out var taskId))
+                    result.Add(taskId);
+            }
+
+            return result;
+        }
+
 
         // ¬спомогательна€ оболочка, поскольку Unity JsonUtility не поддерживает списки верхнего уровн€.
         [System.Serializable]

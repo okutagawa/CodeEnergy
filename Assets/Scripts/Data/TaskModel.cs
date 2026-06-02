@@ -40,6 +40,6 @@ namespace MyGame.Models
         public int maxStars = 3;
         public float timeLimitSeconds = 60f;
 
-        public string worldEvent = "None";
+        public string worldEvent = WorldEventKey.None;
     }
 }

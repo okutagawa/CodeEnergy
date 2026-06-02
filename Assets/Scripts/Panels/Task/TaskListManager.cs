@@ -90,7 +90,7 @@ public class TasksListManager : MonoBehaviour
         // создаЄм TaskItem в том пор€дке, как в currentCourse.taskIds
         foreach (var id in currentCourse.taskIds)
         {
-            var t = allTasks.Find(x => x.id == id);
+            var t = FindTaskInCurrentCourse(id);
             if (t == null)
             {
                 Debug.LogWarning("TasksListManager.RefreshUI: task id not found in allTasks: " + id);
@@ -98,6 +98,17 @@ public class TasksListManager : MonoBehaviour
             }
             AddTaskToUI(t);
         }
+    }
+
+    private TaskModel FindTaskInCurrentCourse(int taskId)
+    {
+        if (allTasks == null) return null;
+
+        var courseId = currentCourse != null ? currentCourse.id : -1;
+        var task = allTasks.Find(t => t != null && t.id == taskId && t.courseId == courseId);
+        if (task != null) return task;
+
+        return allTasks.Find(t => t != null && t.id == taskId && t.courseId <= 0);
     }
 
     private void AddTaskToUI(TaskModel t)
@@ -203,7 +214,8 @@ public class TasksListManager : MonoBehaviour
     {
         if (selectedTaskId < 0) return;
         // удал€ем задачу из списков
-        allTasks.RemoveAll(x => x.id == selectedTaskId);
+        var courseId = currentCourse != null ? currentCourse.id : -1;
+        allTasks.RemoveAll(x => x != null && x.id == selectedTaskId && (x.courseId == courseId || x.courseId <= 0));
         currentCourse.taskIds.RemoveAll(x => x == selectedTaskId);
 
         if (instantiated.TryGetValue(selectedTaskId, out var go)) { Destroy(go); instantiated.Remove(selectedTaskId); }
@@ -220,7 +232,7 @@ public class TasksListManager : MonoBehaviour
     {
         if (selectedTaskId < 0) return;
 
-        var task = allTasks.Find(t => t.id == selectedTaskId);
+        var task = FindTaskInCurrentCourse(selectedTaskId);
         if (task == null)
         {
             Debug.LogError("TasksListManager: selected task not found id=" + selectedTaskId);

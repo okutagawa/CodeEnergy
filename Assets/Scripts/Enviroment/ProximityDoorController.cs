@@ -12,6 +12,7 @@ public class ProximityDoorController : MonoBehaviour
 
     [Header("Gate")]
     [SerializeField] private TaskCompletionGate unlockGate;
+    [SerializeField] private string unlockWorldEvent = WorldEventKey.UnlockDoors;
 
     [Header("Motion mode")]
     [Tooltip("AnimatorBool uses your existing Animator once per open/close request. LocalRotation rotates a door pivot in code and does not require a separate close clip.")]
@@ -65,6 +66,7 @@ public class ProximityDoorController : MonoBehaviour
     private void OnEnable()
     {
         GameState.OnTaskCompleted += HandleTaskCompleted;
+        GameState.OnWorldEventCompleted += HandleWorldEventCompleted;
         RefreshLockState(forceClosed: true);
     }
 
@@ -83,6 +85,7 @@ public class ProximityDoorController : MonoBehaviour
     private void OnDisable()
     {
         GameState.OnTaskCompleted -= HandleTaskCompleted;
+        GameState.OnWorldEventCompleted -= HandleWorldEventCompleted;
     }
 
     private void Update()
@@ -122,6 +125,12 @@ public class ProximityDoorController : MonoBehaviour
         RefreshLockState(forceClosed: true);
     }
 
+    private void HandleWorldEventCompleted(string worldEvent)
+    {
+        if (WorldEventKey.Normalize(worldEvent) == WorldEventKey.Normalize(unlockWorldEvent))
+            RefreshLockState(forceClosed: true);
+    }
+
     private void RefreshLockState(bool forceClosed)
     {
         bool unlocked = IsUnlocked();
@@ -139,7 +148,8 @@ public class ProximityDoorController : MonoBehaviour
 
     private bool IsUnlocked()
     {
-        return unlockGate != null && unlockGate.IsUnlocked();
+        return (unlockGate != null && unlockGate.IsUnlocked())
+            || (GameState.Instance != null && GameState.Instance.IsWorldEventCompleted(unlockWorldEvent));
     }
 
     private void SetOpen(bool open)

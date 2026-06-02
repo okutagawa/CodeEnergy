@@ -10,17 +10,7 @@ public class TaskEditorController : MonoBehaviour
 {
     private const int MinAnswerCount = 2;
     private const int MaxAnswerCount = 5;
-    private const string DefaultWorldEvent = "None";
-
-    private static readonly string[] WorldEventKeys =
-    {
-        "None",
-        "FixLanterns",
-        "UnlockDoors",
-        "StartGenerator",
-        "ActivatePortal",
-        "CompleteIsland"
-    };
+    private const string DefaultWorldEvent = WorldEventKey.None;
 
     private static readonly string[] WorldEventLabels =
     {
@@ -503,7 +493,7 @@ public class TaskEditorController : MonoBehaviour
 
     private void SetWorldEvent(string worldEvent)
     {
-        var idx = System.Array.IndexOf(WorldEventKeys, string.IsNullOrEmpty(worldEvent) ? DefaultWorldEvent : worldEvent);
+        var idx = WorldEventKey.IndexOf(worldEvent);
         if (idx < 0) idx = 0;
         if (dropdownWorldEvent != null)
         {
@@ -515,8 +505,7 @@ public class TaskEditorController : MonoBehaviour
     private string GetWorldEvent()
     {
         if (dropdownWorldEvent == null) return DefaultWorldEvent;
-        var idx = Mathf.Clamp(dropdownWorldEvent.value, 0, WorldEventKeys.Length - 1);
-        return WorldEventKeys[idx];
+        return WorldEventKey.FromIndex(dropdownWorldEvent.value);
     }
 
     private string GetSelectedGuid(Dropdown dropdown, List<string> guids)

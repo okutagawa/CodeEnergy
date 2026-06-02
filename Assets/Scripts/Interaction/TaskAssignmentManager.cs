@@ -131,7 +131,9 @@ public class TaskAssignmentManager : MonoBehaviour
 
         var taskIds = new HashSet<int>(selectedCourse.taskIds);
         var filteredTasks = allTasks
-            .Where(task => task != null && taskIds.Contains(task.id))
+            .Where(task => task != null
+                && taskIds.Contains(task.id)
+                && (task.courseId == selectedCourseId || task.courseId <= 0))
             .ToList();
 
         Debug.Log($"[TAM] Selected course id={selectedCourseId}: loaded {filteredTasks.Count}/{allTasks.Count} task(s).");

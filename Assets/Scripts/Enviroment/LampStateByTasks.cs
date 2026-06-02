@@ -5,7 +5,7 @@ public class LampStateByTasks : MonoBehaviour
 {
     [Header("Required progress")]
     [SerializeField] private int stableAfterCompletedTasks = 2;
-    [SerializeField] private string stableWorldEvent = "FixLanterns";
+    [SerializeField] private string stableWorldEvent = WorldEventKey.FixLanterns;
 
     [Header("References")]
     [SerializeField] private RandomLightFlicker flicker;
@@ -66,7 +66,7 @@ public class LampStateByTasks : MonoBehaviour
 
     private void HandleWorldEventCompleted(string worldEvent)
     {
-        if (string.IsNullOrEmpty(stableWorldEvent) || worldEvent == stableWorldEvent)
+        if (string.IsNullOrEmpty(stableWorldEvent) || WorldEventKey.Normalize(worldEvent) == WorldEventKey.Normalize(stableWorldEvent))
             RefreshState();
     }
 

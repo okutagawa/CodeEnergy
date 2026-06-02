@@ -5,6 +5,7 @@ public class GeneratorStateByTasks : MonoBehaviour
 {
     [Header("Required progress")]
     [SerializeField] private TaskCompletionGate workGate;
+    [SerializeField] private string workWorldEvent = WorldEventKey.StartGenerator;
 
     [Header("Generator animation")]
     [SerializeField] private Animator generatorAnimator;
@@ -24,6 +25,7 @@ public class GeneratorStateByTasks : MonoBehaviour
     private void OnEnable()
     {
         GameState.OnTaskCompleted += HandleTaskCompleted;
+        GameState.OnWorldEventCompleted += HandleWorldEventCompleted;
         RefreshState();
     }
 
@@ -35,6 +37,7 @@ public class GeneratorStateByTasks : MonoBehaviour
     private void OnDisable()
     {
         GameState.OnTaskCompleted -= HandleTaskCompleted;
+        GameState.OnWorldEventCompleted -= HandleWorldEventCompleted;
     }
 
     private void HandleTaskCompleted(int taskId)
@@ -42,9 +45,15 @@ public class GeneratorStateByTasks : MonoBehaviour
         RefreshState();
     }
 
+    private void HandleWorldEventCompleted(string worldEvent)
+    {
+        if (WorldEventKey.Normalize(worldEvent) == WorldEventKey.Normalize(workWorldEvent))
+            RefreshState();
+    }
+
     private void RefreshState()
     {
-        bool shouldWork = workGate != null && workGate.IsUnlocked();
+        bool shouldWork = (workGate != null && workGate.IsUnlocked()) || IsWorldEventCompleted(workWorldEvent);
 
         if (_isWorking == shouldWork)
         {
@@ -54,6 +63,11 @@ public class GeneratorStateByTasks : MonoBehaviour
 
         _isWorking = shouldWork;
         ApplyState();
+    }
+
+    private bool IsWorldEventCompleted(string worldEvent)
+    {
+        return GameState.Instance != null && GameState.Instance.IsWorldEventCompleted(worldEvent);
     }
 
     private void ApplyState()

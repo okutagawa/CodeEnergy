@@ -68,6 +68,7 @@ public class GameState : MonoBehaviour
 
     public void MarkTaskCompleted(int taskId, string worldEvent)
     {
+        worldEvent = WorldEventKey.Normalize(worldEvent);
         var d = GetData();
         if (d.completedWorldEvents == null) d.completedWorldEvents = new System.Collections.Generic.List<string>();
 
@@ -77,7 +78,7 @@ public class GameState : MonoBehaviour
             d.completedTaskIds.Add(taskId);
         }
 
-        bool hasWorldEvent = !string.IsNullOrWhiteSpace(worldEvent) && worldEvent != "None";
+        bool hasWorldEvent = worldEvent != WorldEventKey.None;
         bool isNewWorldEvent = hasWorldEvent && !d.completedWorldEvents.Contains(worldEvent);
         if (isNewWorldEvent)
         {
@@ -114,7 +115,8 @@ public class GameState : MonoBehaviour
 
     public bool IsWorldEventCompleted(string worldEvent)
     {
-        if (string.IsNullOrWhiteSpace(worldEvent) || worldEvent == "None") return false;
+        worldEvent = WorldEventKey.Normalize(worldEvent);
+        if (worldEvent == WorldEventKey.None) return false;
         var events = GetData().completedWorldEvents;
         return events != null && events.Contains(worldEvent);
     }
