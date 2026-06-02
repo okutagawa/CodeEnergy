@@ -52,7 +52,7 @@ public class NPCInteractable : MonoBehaviour
                 rewardEnabled = _peekReceiverTask.rewardEnabled,
                 maxStars = _peekReceiverTask.maxStars,
                 timeLimitSeconds = _peekReceiverTask.timeLimitSeconds,
-                worldEvent = _peekReceiverTask.worldEvent
+                worldEvent = WorldEventKey.Normalize(_peekReceiverTask.worldEvent)
             };
 
             quizPanel.Show(quizTask, this);
