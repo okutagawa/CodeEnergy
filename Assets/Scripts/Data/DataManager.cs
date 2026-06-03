@@ -158,6 +158,8 @@ namespace MyGame.Data
             task.maxStars = Mathf.Clamp(task.maxStars, 1, 3);
 
             if (task.timeLimitSeconds <= 0f) task.timeLimitSeconds = 60f;
+            if (task.hintText == null) task.hintText = "";
+            task.hintCost = Mathf.Clamp(task.hintCost <= 0 ? 1 : task.hintCost, 1, 3);
             task.worldEvent = WorldEventKey.Normalize(task.worldEvent);
 
             // Old JSON files did not have rewardEnabled. For those files, default rewards to enabled.
