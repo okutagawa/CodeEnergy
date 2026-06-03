@@ -216,6 +216,28 @@ public class RewardProgressTests
     }
 
     [Test]
+    public void TrySpendStars_WhenEnoughStars_ShouldSubtractCost()
+    {
+        _gameState.TryAwardTaskStars(18, 3, 0);
+
+        var result = _gameState.TrySpendStars(2);
+
+        Assert.IsTrue(result);
+        Assert.AreEqual(1, _gameState.GetTotalStars());
+    }
+
+    [Test]
+    public void TrySpendStars_WhenNotEnoughStars_ShouldReturnFalseAndKeepBalance()
+    {
+        _gameState.TryAwardTaskStars(19, 1, 0);
+
+        var result = _gameState.TrySpendStars(2);
+
+        Assert.IsFalse(result);
+        Assert.AreEqual(1, _gameState.GetTotalStars());
+    }
+
+    [Test]
     public void IsTaskRewarded_WhenRewardExists_ShouldReturnTrue()
     {
         _gameState.TryAwardTaskStars(15, 1, 0);

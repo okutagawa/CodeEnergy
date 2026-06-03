@@ -14,6 +14,13 @@ public class QuizPanelController : MonoBehaviour
     [SerializeField] private Button nextButton;
     [SerializeField] private Button closeButton;
 
+    [Header("Hint")]
+    [SerializeField] private Button hintButton;
+    [SerializeField] private Text hintCostText;
+    [SerializeField] private GameObject hintPanel;
+    [SerializeField] private Text hintText;
+    [SerializeField] private Button hintCloseButton;
+
     [Header("Prefabs")]
     [SerializeField] private QuizCardController quizCardPrefab;
     [SerializeField] private RewardPanelController rewardPanelPrefab;
@@ -27,12 +34,39 @@ public class QuizPanelController : MonoBehaviour
     private bool _isMulti;
     private NPCInteractable _sourceNpc;
     private float _openedAtUnscaledTime;
+    private bool _hintPurchasedForCurrentQuiz;
 
     private void Awake()
     {
+        TryAutoAssignHintRefs();
+
         if (submitButton != null) submitButton.onClick.AddListener(HandleSubmit);
         if (nextButton != null) nextButton.onClick.AddListener(HandleNext);
         if (closeButton != null) closeButton.onClick.AddListener(ClosePanel);
+        if (hintButton != null) hintButton.onClick.AddListener(HandleHintClicked);
+        if (hintCloseButton != null) hintCloseButton.onClick.AddListener(CloseHintPanel);
+
+        SetHintButtonVisible(false);
+        CloseHintPanel();
+    }
+
+    private void OnEnable()
+    {
+        TryAutoAssignHintRefs();
+        if (_task == null)
+        {
+            SetHintButtonVisible(false);
+            CloseHintPanel();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (submitButton != null) submitButton.onClick.RemoveListener(HandleSubmit);
+        if (nextButton != null) nextButton.onClick.RemoveListener(HandleNext);
+        if (closeButton != null) closeButton.onClick.RemoveListener(ClosePanel);
+        if (hintButton != null) hintButton.onClick.RemoveListener(HandleHintClicked);
+        if (hintCloseButton != null) hintCloseButton.onClick.RemoveListener(CloseHintPanel);
     }
 
     public void Show(QuizTask task, NPCInteractable sourceNpc = null)
@@ -40,6 +74,9 @@ public class QuizPanelController : MonoBehaviour
         _sourceNpc = sourceNpc;
         _task = task;
         _openedAtUnscaledTime = Time.unscaledTime;
+        _hintPurchasedForCurrentQuiz = false;
+        CloseHintPanel();
+        RefreshHintButton();
         gameObject.SetActive(true);
         StopAllCoroutines();
         StartCoroutine(ShowRoutine(task));
@@ -49,6 +86,8 @@ public class QuizPanelController : MonoBehaviour
     {
         _task = task;
         _isMulti = task != null && task.correctAnswerIndexes != null && task.correctAnswerIndexes.Count > 1;
+
+        RefreshHintButton();
 
         if (titleText != null) titleText.text = task?.title ?? "";
         if (bodyText != null) bodyText.text = !string.IsNullOrEmpty(task?.questionText) ? task.questionText : (task?.textForReceiver ?? "");
@@ -194,15 +233,166 @@ public class QuizPanelController : MonoBehaviour
         ClosePanel();
     }
 
+    private void HandleHintClicked()
+    {
+        if (!HasUsableHint())
+        {
+            RefreshHintButton();
+            return;
+        }
+
+        if (_hintPurchasedForCurrentQuiz)
+        {
+            OpenHintPanel(_task.hintText);
+            return;
+        }
+
+        var gameState = GameState.Instance;
+        if (gameState == null)
+        {
+            Debug.LogWarning("[Quiz] GameState.Instance is null. Hint purchase is unavailable.");
+            ShowHintMessage("\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u0437\u0432\u0451\u0437\u0434");
+            return;
+        }
+
+        int cost = Mathf.Max(1, _task.hintCost);
+        if (!gameState.TrySpendStars(cost))
+        {
+            ShowHintMessage("\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u0437\u0432\u0451\u0437\u0434");
+            return;
+        }
+
+        _hintPurchasedForCurrentQuiz = true;
+        OpenHintPanel(_task.hintText);
+    }
+
+    private bool HasUsableHint()
+    {
+        return _task != null && _task.hintEnabled && !string.IsNullOrWhiteSpace(_task.hintText);
+    }
+
+    private void RefreshHintButton()
+    {
+        bool visible = HasUsableHint();
+        SetHintButtonVisible(visible);
+
+        if (hintCostText != null && visible)
+        {
+            int cost = Mathf.Max(1, _task.hintCost);
+            hintCostText.text = $"{cost} \u2605";
+        }
+    }
+
+    private void SetHintButtonVisible(bool visible)
+    {
+        if (hintButton != null) hintButton.gameObject.SetActive(visible);
+    }
+
+    private void OpenHintPanel(string message)
+    {
+        if (hintText != null) hintText.text = message ?? "";
+        if (hintPanel != null) hintPanel.SetActive(true);
+    }
+
+    private void ShowHintMessage(string message)
+    {
+        Debug.LogWarning("[Quiz] " + message);
+        OpenHintPanel(message);
+    }
+
+    private void CloseHintPanel()
+    {
+        if (hintPanel != null) hintPanel.SetActive(false);
+    }
+
+    private void TryAutoAssignHintRefs()
+    {
+        hintButton = hintButton != null ? hintButton : FindButton("BtnHint", "HintBtn");
+        hintPanel = hintPanel != null ? hintPanel : FindChildGameObject("HintPanel");
+        hintText = hintText != null ? hintText : FindText("HintText");
+        hintCostText = hintCostText != null ? hintCostText : FindText("TextCost");
+        hintCloseButton = hintCloseButton != null ? hintCloseButton : FindHintPanelButton("BtnClose", "ButtonCloseHint", "HintBtnClose");
+    }
+
+    private Button FindButton(params string[] names) => FindComponentByNames<Button>(names);
+    private Text FindText(params string[] names) => FindComponentByNames<Text>(names);
+
+    private Button FindHintPanelButton(params string[] names)
+    {
+        var button = FindComponentInRootByNames<Button>(hintPanel, names);
+        return button != null ? button : FindButton(names);
+    }
+
+    private T FindComponentByNames<T>(params string[] names) where T : Component
+    {
+        return FindComponentInRootByNames<T>(gameObject, names);
+    }
+
+    private T FindComponentInRootByNames<T>(GameObject root, params string[] names) where T : Component
+    {
+        if (root == null) return null;
+
+        foreach (var name in names)
+        {
+            var go = FindChildGameObject(root, name);
+            if (go == null) continue;
+
+            var component = go.GetComponent<T>();
+            if (component != null) return component;
+        }
+
+        return null;
+    }
+
+    private GameObject FindChildGameObject(string childName)
+    {
+        var child = FindChildGameObject(gameObject, childName);
+        return child != null ? child : FindSceneGameObject(childName);
+    }
+
+    private GameObject FindChildGameObject(GameObject root, string childName)
+    {
+        if (root == null || string.IsNullOrEmpty(childName)) return null;
+
+        var transforms = root.GetComponentsInChildren<Transform>(true);
+        foreach (var t in transforms)
+        {
+            if (t != null && t.name == childName) return t.gameObject;
+        }
+
+        return null;
+    }
+
+    private GameObject FindSceneGameObject(string objectName)
+    {
+        if (string.IsNullOrEmpty(objectName)) return null;
+
+        var transforms = FindObjectsOfType<Transform>(true);
+        foreach (var t in transforms)
+        {
+            if (t != null && t.name == objectName) return t.gameObject;
+        }
+
+        return null;
+    }
+
     private void ClosePanel()
     {
         _task = null;
         _sourceNpc = null;
+        _hintPurchasedForCurrentQuiz = false;
+        SetHintButtonVisible(false);
+        CloseHintPanel();
         gameObject.SetActive(false);
     }
 
     public void ForceCloseFromReward()
     {
+        _task = null;
+        _sourceNpc = null;
+        _hintPurchasedForCurrentQuiz = false;
+        SetHintButtonVisible(false);
+        CloseHintPanel();
         gameObject.SetActive(false);
     }
 

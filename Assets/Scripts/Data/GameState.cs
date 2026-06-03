@@ -158,6 +158,21 @@ public class GameState : MonoBehaviour
         return entry != null ? Mathf.Max(0, entry.failedAttempts) : 0;
     }
 
+    public bool TrySpendStars(int stars)
+    {
+        int cost = Mathf.Max(0, stars);
+        var d = GetData();
+
+        if (d.totalStars < cost)
+            return false;
+
+        d.totalStars -= cost;
+        SaveState();
+        NotifyTotalStarsChanged();
+        return true;
+    }
+
+
     public void RegisterFailedQuizAttempt(int taskId)
     {
         var d = GetData();

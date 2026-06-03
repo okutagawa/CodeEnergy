@@ -13,5 +13,8 @@ public class QuizTask
     public bool rewardEnabled = true;
     public int maxStars = 3;
     public float timeLimitSeconds = 60f;
+    public bool hintEnabled = false;
+    public string hintText = "";
+    public int hintCost = 1;
     public string worldEvent = WorldEventKey.None;
 }

@@ -62,6 +62,11 @@ public class TaskEditorController : MonoBehaviour
     public Dropdown dropdownMaxStars;
     public InputField inputTimeLimit;
 
+    [Header("Section_Hint")]
+    public Toggle toggleHintEnabled;
+    public InputField inputHintText;
+    public Dropdown dropdownHintCost;
+
     [Header("Section_WorldEvent")]
     public Dropdown dropdownWorldEvent;
 
@@ -92,6 +97,7 @@ public class TaskEditorController : MonoBehaviour
         SetupStaticDropdownOptions(false);
         BindButtons();
         BindAnswerCountDropdown();
+        BindHintToggle();
         DisableLegacyInputExpander();
     }
 
@@ -100,6 +106,7 @@ public class TaskEditorController : MonoBehaviour
     {
         BindButtons();
         BindAnswerCountDropdown();
+        BindHintToggle();
     }
 
     private void OnDisable()
@@ -108,6 +115,7 @@ public class TaskEditorController : MonoBehaviour
         if (buttonClearForm != null) buttonClearForm.onClick.RemoveListener(OnClearFormClicked);
         if (buttonBack != null) buttonBack.onClick.RemoveListener(OnBackClicked);
         if (dropdownAnswersCount != null) dropdownAnswersCount.onValueChanged.RemoveListener(OnAnswersCountChanged);
+        if (toggleHintEnabled != null) toggleHintEnabled.onValueChanged.RemoveListener(OnHintEnabledChanged);
     }
 
     public void OpenForCourseEditor(int courseId)
@@ -193,6 +201,15 @@ public class TaskEditorController : MonoBehaviour
         ApplyAnswerCount(GetSelectedAnswerCount());
     }
 
+    private void BindHintToggle()
+    {
+        if (toggleHintEnabled == null) return;
+
+        toggleHintEnabled.onValueChanged.RemoveListener(OnHintEnabledChanged);
+        toggleHintEnabled.onValueChanged.AddListener(OnHintEnabledChanged);
+        ApplyHintUiState(toggleHintEnabled.isOn);
+    }
+
     private void SetupStaticDropdownOptions(bool applyDefaults)
     {
         if (dropdownAnswersCount != null)
@@ -226,6 +243,15 @@ public class TaskEditorController : MonoBehaviour
             else dropdownWorldEvent.SetValueWithoutNotify(Mathf.Clamp(dropdownWorldEvent.value, 0, WorldEventLabels.Length - 1));
             dropdownWorldEvent.RefreshShownValue();
         }
+
+        if (dropdownHintCost != null)
+        {
+            dropdownHintCost.ClearOptions();
+            dropdownHintCost.AddOptions(new List<string> { "1", "2", "3" });
+            if (applyDefaults) dropdownHintCost.SetValueWithoutNotify(0);
+            else dropdownHintCost.SetValueWithoutNotify(Mathf.Clamp(dropdownHintCost.value, 0, 2));
+            dropdownHintCost.RefreshShownValue();
+        }
     }
 
     private void TryAutoAssignUiRefs()
@@ -243,12 +269,14 @@ public class TaskEditorController : MonoBehaviour
         inputAnswer4 = inputAnswer4 ?? FindInput("Input_Answer4");
         inputAnswer5 = inputAnswer5 ?? FindInput("Input_Answer5");
         inputTimeLimit = inputTimeLimit ?? FindInput("Input_TimeLimit");
+        inputHintText = inputHintText ?? FindInput("Input_HintText");
 
         dropdownGiverNPC = dropdownGiverNPC ?? FindDropdown("Dropdown_GiverNPC");
         dropdownReceiverNPC = dropdownReceiverNPC ?? FindDropdown("Dropdown_ReceiverNPC");
         dropdownAnswersCount = dropdownAnswersCount ?? FindDropdown("Dropdown_AnswersCount");
         dropdownMaxStars = dropdownMaxStars ?? FindDropdown("Dropdown_MaxStars");
         dropdownWorldEvent = dropdownWorldEvent ?? FindDropdown("Dropdown_WorldEvent");
+        dropdownHintCost = dropdownHintCost ?? FindDropdown("Dropdown_HintCost");
 
         toggleCorrect1 = toggleCorrect1 ?? FindToggle("Toggle_Correct1");
         toggleCorrect2 = toggleCorrect2 ?? FindToggle("Toggle_Correct2");
@@ -256,6 +284,7 @@ public class TaskEditorController : MonoBehaviour
         toggleCorrect4 = toggleCorrect4 ?? FindToggle("Toggle_Correct4");
         toggleCorrect5 = toggleCorrect5 ?? FindToggle("Toggle_Correct5");
         toggleRewardEnabled = toggleRewardEnabled ?? FindToggle("Toggle_RewardEnabled");
+        toggleHintEnabled = toggleHintEnabled ?? FindToggle("Toggle_HintEnabled");
 
         rowAnswer1 = rowAnswer1 ?? FindChildGameObject("Row_Answer1");
         rowAnswer2 = rowAnswer2 ?? FindChildGameObject("Row_Answer2");
@@ -416,6 +445,7 @@ public class TaskEditorController : MonoBehaviour
         if (toggleRewardEnabled != null) toggleRewardEnabled.isOn = model.rewardEnabled;
         SetMaxStars(model.maxStars);
         if (inputTimeLimit != null) inputTimeLimit.text = model.timeLimitSeconds.ToString(CultureInfo.InvariantCulture);
+        RestoreHint(model.hintEnabled, model.hintText, model.hintCost);
         RestoreWorldEvent(worldEvent);
         Debug.Log($"[TaskEditor] UI restored answerDropdown={(dropdownAnswersCount != null ? dropdownAnswersCount.value : -1)}, worldEventDropdown={(dropdownWorldEvent != null ? dropdownWorldEvent.value : -1)}");
     }
@@ -447,6 +477,7 @@ public class TaskEditorController : MonoBehaviour
         if (toggleRewardEnabled != null) toggleRewardEnabled.isOn = true;
         SetMaxStars(3);
         if (inputTimeLimit != null) inputTimeLimit.text = "60";
+        SetHint(false, "", 1);
         SetWorldEvent(DefaultWorldEvent);
         UpdateAnswerRows(MinAnswerCount);
     }
@@ -550,6 +581,58 @@ public class TaskEditorController : MonoBehaviour
     {
         if (dropdownWorldEvent == null) return DefaultWorldEvent;
         return WorldEventKey.FromIndex(dropdownWorldEvent.value);
+    }
+
+    private void SetHint(bool enabled, string text, int cost)
+    {
+        if (toggleHintEnabled != null) toggleHintEnabled.isOn = enabled;
+        if (inputHintText != null) inputHintText.text = text ?? "";
+        SetHintCost(cost);
+        ApplyHintUiState(enabled);
+    }
+
+    private void RestoreHint(bool enabled, string text, int cost)
+    {
+        if (toggleHintEnabled != null) toggleHintEnabled.SetValueWithoutNotify(enabled);
+        if (inputHintText != null) inputHintText.text = text ?? "";
+        RestoreHintCost(cost);
+        ApplyHintUiState(enabled);
+    }
+
+    private void SetHintCost(int cost)
+    {
+        cost = Mathf.Clamp(cost <= 0 ? 1 : cost, 1, 3);
+        if (dropdownHintCost != null)
+        {
+            dropdownHintCost.value = cost - 1;
+            dropdownHintCost.RefreshShownValue();
+        }
+    }
+
+    private void RestoreHintCost(int cost)
+    {
+        cost = Mathf.Clamp(cost <= 0 ? 1 : cost, 1, 3);
+        if (dropdownHintCost != null)
+        {
+            dropdownHintCost.SetValueWithoutNotify(cost - 1);
+            dropdownHintCost.RefreshShownValue();
+        }
+    }
+
+    private int GetHintCost()
+    {
+        return dropdownHintCost == null ? 1 : Mathf.Clamp(dropdownHintCost.value + 1, 1, 3);
+    }
+
+    private void OnHintEnabledChanged(bool isEnabled)
+    {
+        ApplyHintUiState(isEnabled);
+    }
+
+    private void ApplyHintUiState(bool isEnabled)
+    {
+        if (inputHintText != null) inputHintText.interactable = isEnabled;
+        if (dropdownHintCost != null) dropdownHintCost.interactable = isEnabled;
     }
 
     private string GetSelectedGuid(Dropdown dropdown, List<string> guids)
@@ -660,6 +743,12 @@ public class TaskEditorController : MonoBehaviour
             }
         }
 
+        if (toggleHintEnabled != null && toggleHintEnabled.isOn && (inputHintText == null || string.IsNullOrWhiteSpace(inputHintText.text)))
+        {
+            error = "Hint text is required when hint is enabled";
+            return false;
+        }
+
         return true;
     }
 
@@ -690,6 +779,9 @@ public class TaskEditorController : MonoBehaviour
         model.hasStars = model.rewardEnabled;
         model.maxStars = GetMaxStars();
         model.timeLimitSeconds = ParseTimeLimitOrDefault();
+        model.hintEnabled = toggleHintEnabled != null && toggleHintEnabled.isOn;
+        model.hintText = inputHintText != null ? inputHintText.text.Trim() : "";
+        model.hintCost = GetHintCost();
         model.worldEvent = GetWorldEvent();
     }
 
