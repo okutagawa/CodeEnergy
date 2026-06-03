@@ -6417,9 +6417,29 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7919781881496637906, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
+      propertyPath: hintText
+      value: 
+      objectReference: {fileID: 1190937078}
+    - target: {fileID: 7919781881496637906, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
+      propertyPath: hintPanel
+      value: 
+      objectReference: {fileID: 1638899979}
+    - target: {fileID: 7919781881496637906, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
+      propertyPath: hintButton
+      value: 
+      objectReference: {fileID: 1200245283}
+    - target: {fileID: 7919781881496637906, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
+      propertyPath: hintCostText
+      value: 
+      objectReference: {fileID: 1675449425}
+    - target: {fileID: 7919781881496637906, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
       propertyPath: quizCardPrefab
       value: 
       objectReference: {fileID: 6953445342346536865, guid: 101ea1b879aa00741b87c19a245d15f5, type: 3}
+    - target: {fileID: 7919781881496637906, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
+      propertyPath: hintCloseButton
+      value: 
+      objectReference: {fileID: 1480284522}
     - target: {fileID: 7919781881496637906, guid: 86d79bee41d9fcd4da077d2bb98e52fd, type: 3}
       propertyPath: rewardPanelPrefab
       value: 
@@ -16293,7 +16313,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &938549425
 RectTransform:
   m_ObjectHideFlags: 0
@@ -21464,7 +21484,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1200245282
 RectTransform:
   m_ObjectHideFlags: 0
@@ -29431,7 +29451,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1638899980
 RectTransform:
   m_ObjectHideFlags: 0

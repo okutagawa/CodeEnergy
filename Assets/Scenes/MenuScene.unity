@@ -12047,6 +12047,9 @@ MonoBehaviour:
   toggleRewardEnabled: {fileID: 6381292}
   dropdownMaxStars: {fileID: 106631008}
   inputTimeLimit: {fileID: 1240980131}
+  toggleHintEnabled: {fileID: 1483119870}
+  inputHintText: {fileID: 30872873}
+  dropdownHintCost: {fileID: 600598214}
   dropdownWorldEvent: {fileID: 154133936}
   buttonSaveTask: {fileID: 1918410374}
   buttonClearForm: {fileID: 167427156}
