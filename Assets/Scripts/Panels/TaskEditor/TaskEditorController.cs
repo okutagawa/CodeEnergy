@@ -593,8 +593,16 @@ public class TaskEditorController : MonoBehaviour
 
     private void RestoreHint(bool enabled, string text, int cost)
     {
-        if (toggleHintEnabled != null) toggleHintEnabled.SetValueWithoutNotify(enabled);
-        if (inputHintText != null) inputHintText.text = text ?? "";
+        if (toggleHintEnabled != null)
+        {
+            toggleHintEnabled.isOn = enabled;
+        }
+
+        if (inputHintText != null)
+        {
+            inputHintText.text = text ?? "";
+        }
+
         RestoreHintCost(cost);
         ApplyHintUiState(enabled);
     }
