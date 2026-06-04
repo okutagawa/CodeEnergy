@@ -1,3 +1,5 @@
+using System.Linq;
+using MyGame.Data;
 using UnityEngine;
 
 public class FinalTestPortalInteractable : MonoBehaviour
@@ -20,6 +22,14 @@ public class FinalTestPortalInteractable : MonoBehaviour
             return;
         }
 
-        finalTestController.StartFinalTestForSelectedCourse();
+        int courseId = GameState.Instance != null ? GameState.Instance.GetData().selectedCourseId : -1;
+        var course = DataManager.LoadCourses()?.courses?.FirstOrDefault(c => c != null && c.id == courseId);
+        if (!FinalTestController.AreAllCourseTasksCompleted(course))
+        {
+            Debug.LogWarning("[FinalTestPortal] Final test is locked until all selected course tasks are completed.");
+            return;
+        }
+
+        finalTestController.StartFinalTestForCourse(courseId);
     }
 }

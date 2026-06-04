@@ -31,6 +31,12 @@ public class FinalTestController : MonoBehaviour
             return;
         }
 
+        if (!AreAllCourseTasksCompleted(course))
+        {
+            Debug.LogWarning($"[FinalTest] Course {courseId} final test is locked until all course tasks are completed.");
+            return;
+        }
+
         DataManager.NormalizeFinalTestDefaults(course.finalTest);
         if (course.finalTest == null || course.finalTest.questions == null || course.finalTest.questions.Count == 0)
         {
@@ -111,6 +117,20 @@ public class FinalTestController : MonoBehaviour
         EnsureRefs();
         if (resultPanel != null)
             resultPanel.Show(this, _correctAnswers, total, required, passed);
+    }
+
+    public static bool AreAllCourseTasksCompleted(CourseModel course)
+    {
+        if (course == null || GameState.Instance == null) return false;
+
+        var requiredTaskIds = course.taskIds != null
+            ? course.taskIds.Where(id => id >= 0).Distinct().ToList()
+            : new List<int>();
+
+        if (requiredTaskIds.Count == 0) return true;
+
+        var completedTaskIds = GameState.Instance.GetData().completedTaskIds;
+        return completedTaskIds != null && requiredTaskIds.All(id => completedTaskIds.Contains(id));
     }
 
     private void EnsureRefs()

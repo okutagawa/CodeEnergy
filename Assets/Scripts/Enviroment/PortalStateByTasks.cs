@@ -57,7 +57,7 @@ public class PortalStateByTasks : MonoBehaviour
 
     private void RefreshState()
     {
-        bool shouldBeActive = (activationGate != null && activationGate.IsUnlocked()) || IsWorldEventCompleted(activationWorldEvent);
+        bool shouldBeActive = IsWorldEventCompleted(activationWorldEvent);
 
         if (_isActive == shouldBeActive)
         {

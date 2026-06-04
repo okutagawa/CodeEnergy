@@ -21,6 +21,8 @@ public class TasksListManager : MonoBehaviour
     private CoursesContainer coursesContainer;
     private List<TaskModel> allTasks;
     private CourseModel currentCourse;
+    private const int FinalTestTaskItemId = int.MinValue;
+    private const string FinalTestTaskTitle = " ";
     private Dictionary<int, GameObject> instantiated = new Dictionary<int, GameObject>();
     private int selectedTaskId = -1;
 
@@ -102,6 +104,7 @@ public class TasksListManager : MonoBehaviour
             }
             AddTaskToUI(t);
         }
+        AddFinalTestToUI();
     }
 
     private TaskModel FindTaskInCurrentCourse(int taskId)
@@ -146,10 +149,43 @@ public class TasksListManager : MonoBehaviour
         Debug.Log($"TasksListManager: instantiated TaskItem id={t.id} title='{t.title}'");
     }
 
-    private void OnTaskSingleClick(TaskModel t) => SelectTask(t.id);
+    private void AddFinalTestToUI()
+    {
+        var finalTestItem = new TaskModel
+        {
+            id = FinalTestTaskItemId,
+            courseId = currentCourse != null ? currentCourse.id : -1,
+            title = FinalTestTaskTitle
+        };
+
+        AddTaskToUI(finalTestItem);
+    }
+
+    private bool IsFinalTestTask(TaskModel task)
+    {
+        return task != null && task.id == FinalTestTaskItemId;
+    }
+
+    private void OnTaskSingleClick(TaskModel t)
+    {
+        if (IsFinalTestTask(t))
+        {
+            SelectTask(FinalTestTaskItemId);
+            return;
+        }
+
+        SelectTask(t.id);
+    }
 
     private void OnTaskDoubleClick(TaskModel t)
     {
+        if (IsFinalTestTask(t))
+        {
+            SelectTask(FinalTestTaskItemId);
+            OnEditFinalTestClicked();
+            return;
+        }
+
         SelectTask(t.id);
         OnEditTaskClicked();
     }
@@ -165,9 +201,9 @@ public class TasksListManager : MonoBehaviour
 
     private void UpdateButtons()
     {
-        bool hasSelection = selectedTaskId >= 0;
-        if (buttonDeleteTask != null) buttonDeleteTask.interactable = hasSelection;
-        if (buttonEditTask != null) buttonEditTask.interactable = hasSelection;
+        bool hasTaskSelection = selectedTaskId >= 0;
+        if (buttonDeleteTask != null) buttonDeleteTask.interactable = hasTaskSelection;
+        if (buttonEditTask != null) buttonEditTask.interactable = hasTaskSelection;
     }
 
     // ADD: добавляем пустую задачу (для теста с пустыми именами)

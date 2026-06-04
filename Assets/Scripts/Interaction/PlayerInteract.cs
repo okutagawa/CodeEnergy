@@ -63,28 +63,31 @@ public class PlayerInteract : MonoBehaviour
         {
             var npc = ResolveNpcInteractable(hit.collider);
             var portal = ResolveFinalTestPortalInteractable(hit.collider);
+            if (npc == null && portal == null)
+            {
+                ClearCurrentOutline();
+                return;
+            }
             if (npc != currentHoveredNpc || portal != currentHoveredPortal)
             {
-                if (npc != currentHoveredNpc)
-                {
-                    ClearCurrentOutline();
+                ClearCurrentOutline();
 
-                    currentHoveredNpc = npc;
-                    currentHoveredPortal = portal;
-                    currentHoveredCollider = hit.collider;
-                    var outlineSource = currentHoveredNpc != null ? currentHoveredNpc.gameObject : currentHoveredPortal.gameObject;
-                    currentOutline = outlineSource.GetComponent<Outline>()
-                                     ?? outlineSource.GetComponentInChildren<Outline>()
-                                     ?? outlineSource.GetComponentInParent<Outline>();
-                    if (currentOutline != null)
-                    {
-                        currentOutline.enabled = true;
-                    }
-                    else
-                    {
-                        currentHoveredCollider = hit.collider;
-                    }
+                currentHoveredNpc = npc;
+                currentHoveredPortal = portal;
+                currentHoveredCollider = hit.collider;
+                var outlineSource = currentHoveredNpc != null ? currentHoveredNpc.gameObject : currentHoveredPortal.gameObject;
+                currentOutline = outlineSource.GetComponent<Outline>()
+                                    ?? outlineSource.GetComponentInChildren<Outline>()
+                                    ?? outlineSource.GetComponentInParent<Outline>();
+                if (currentOutline != null)
+                {
+                    currentOutline.enabled = true;
                 }
+                else
+                {
+                    currentHoveredCollider = hit.collider;
+                }
+                
 
                 return;
             }
