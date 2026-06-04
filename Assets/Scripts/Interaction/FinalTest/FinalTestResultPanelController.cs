@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class FinalTestResultPanelController : MonoBehaviour
@@ -15,6 +16,9 @@ public class FinalTestResultPanelController : MonoBehaviour
     [SerializeField] private Button buttonRetry;
     [SerializeField] private Button buttonFinish;
     [SerializeField] private Button buttonClose;
+
+    [Header("Navigation")]
+    [SerializeField] private string menuSceneName = "MenuScene";
 
     private FinalTestController _controller;
 
@@ -65,6 +69,14 @@ public class FinalTestResultPanelController : MonoBehaviour
     private void HandleFinish()
     {
         gameObject.SetActive(false);
+
+        if (string.IsNullOrWhiteSpace(menuSceneName))
+        {
+            Debug.LogError("[FinalTestResult] Menu scene name is empty. Cannot finish final test.");
+            return;
+        }
+
+        SceneManager.LoadScene(menuSceneName);
     }
 
     private void HandleClose()

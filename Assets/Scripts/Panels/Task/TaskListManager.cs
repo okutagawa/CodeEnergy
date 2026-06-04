@@ -17,24 +17,28 @@ public class TasksListManager : MonoBehaviour
     public Button buttonSave;
     public Button buttonExit;
     public Button buttonAddFinalTest;
+    public Button buttonEditFinalTest;
+    public Button buttonDeleteFinalTest;
 
     private CoursesContainer coursesContainer;
     private List<TaskModel> allTasks;
     private CourseModel currentCourse;
     private const int FinalTestTaskItemId = int.MinValue;
-    private const string FinalTestTaskTitle = " ";
+    private const string DefaultFinalTestTaskTitle = "Итоговый тест";
     private Dictionary<int, GameObject> instantiated = new Dictionary<int, GameObject>();
     private int selectedTaskId = -1;
 
     private void OnEnable()
     {
         TryAutoAssignOptionalButtons();
-        if (buttonAddTask != null) buttonAddTask.onClick.AddListener(OnAddTaskClicked);
-        if (buttonDeleteTask != null) buttonDeleteTask.onClick.AddListener(OnDeleteTaskClicked);
-        if (buttonSave != null) buttonSave.onClick.AddListener(OnSaveClicked);
-        if (buttonExit != null) buttonExit.onClick.AddListener(OnExitClicked);
-        if (buttonEditTask != null) buttonEditTask.onClick.AddListener(OnEditTaskClicked);
-        if (buttonAddFinalTest != null) buttonAddFinalTest.onClick.AddListener(OnEditFinalTestClicked);
+        if (buttonAddTask != null) { buttonAddTask.onClick.RemoveListener(OnAddTaskClicked); buttonAddTask.onClick.AddListener(OnAddTaskClicked); }
+        if (buttonDeleteTask != null) { buttonDeleteTask.onClick.RemoveListener(OnDeleteTaskClicked); buttonDeleteTask.onClick.AddListener(OnDeleteTaskClicked); }
+        if (buttonSave != null) { buttonSave.onClick.RemoveListener(OnSaveClicked); buttonSave.onClick.AddListener(OnSaveClicked); }
+        if (buttonExit != null) { buttonExit.onClick.RemoveListener(OnExitClicked); buttonExit.onClick.AddListener(OnExitClicked); }
+        if (buttonEditTask != null) { buttonEditTask.onClick.RemoveListener(OnEditTaskClicked); buttonEditTask.onClick.AddListener(OnEditTaskClicked); }
+        if (buttonAddFinalTest != null) { buttonAddFinalTest.onClick.RemoveListener(OnEditFinalTestClicked); buttonAddFinalTest.onClick.AddListener(OnEditFinalTestClicked); }
+        if (buttonEditFinalTest != null) { buttonEditFinalTest.onClick.RemoveListener(OnEditFinalTestClicked); buttonEditFinalTest.onClick.AddListener(OnEditFinalTestClicked); }
+        if (buttonDeleteFinalTest != null) { buttonDeleteFinalTest.onClick.RemoveListener(OnDeleteFinalTestClicked); buttonDeleteFinalTest.onClick.AddListener(OnDeleteFinalTestClicked); }
     }
 
     private void OnDisable()
@@ -45,6 +49,8 @@ public class TasksListManager : MonoBehaviour
         if (buttonExit != null) buttonExit.onClick.RemoveListener(OnExitClicked);
         if (buttonEditTask != null) buttonEditTask.onClick.RemoveListener(OnEditTaskClicked);
         if (buttonAddFinalTest != null) buttonAddFinalTest.onClick.RemoveListener(OnEditFinalTestClicked);
+        if (buttonEditFinalTest != null) buttonEditFinalTest.onClick.RemoveListener(OnEditFinalTestClicked);
+        if (buttonDeleteFinalTest != null) buttonDeleteFinalTest.onClick.RemoveListener(OnDeleteFinalTestClicked);
     }
 
     // Вызывается из UIManager.OpenTasksWindowForCourse(courseId)
@@ -155,10 +161,23 @@ public class TasksListManager : MonoBehaviour
         {
             id = FinalTestTaskItemId,
             courseId = currentCourse != null ? currentCourse.id : -1,
-            title = FinalTestTaskTitle
+            title = GetFinalTestDisplayTitle()
         };
 
         AddTaskToUI(finalTestItem);
+    }
+
+    private string GetFinalTestDisplayTitle()
+    {
+        var title = currentCourse?.finalTest?.title;
+        return string.IsNullOrWhiteSpace(title) ? DefaultFinalTestTaskTitle : title.Trim();
+    }
+
+    private bool HasFinalTest()
+    {
+        return currentCourse?.finalTest != null
+            && currentCourse.finalTest.questions != null
+            && currentCourse.finalTest.questions.Count > 0;
     }
 
     private bool IsFinalTestTask(TaskModel task)
@@ -201,9 +220,13 @@ public class TasksListManager : MonoBehaviour
 
     private void UpdateButtons()
     {
-        bool hasTaskSelection = selectedTaskId >= 0;
-        if (buttonDeleteTask != null) buttonDeleteTask.interactable = hasTaskSelection;
-        if (buttonEditTask != null) buttonEditTask.interactable = hasTaskSelection;
+        bool hasRegularTaskSelection = selectedTaskId >= 0;
+        bool hasFinalTestSelection = selectedTaskId == FinalTestTaskItemId;
+        if (buttonDeleteTask != null) buttonDeleteTask.interactable = hasRegularTaskSelection;
+        if (buttonEditTask != null) buttonEditTask.interactable = hasRegularTaskSelection;
+        if (buttonAddFinalTest != null) buttonAddFinalTest.interactable = currentCourse != null && !HasFinalTest();
+        if (buttonEditFinalTest != null) buttonEditFinalTest.interactable = hasFinalTestSelection || HasFinalTest();
+        if (buttonDeleteFinalTest != null) buttonDeleteFinalTest.interactable = HasFinalTest();
     }
 
     // ADD: добавляем пустую задачу (для теста с пустыми именами)
@@ -273,10 +296,35 @@ public class TasksListManager : MonoBehaviour
         editor.OpenForCourse(currentCourse.id);
     }
 
+    private void OnDeleteFinalTestClicked()
+    {
+        if (currentCourse == null)
+        {
+            Debug.LogError("TasksListManager.OnDeleteFinalTestClicked: currentCourse is null");
+            return;
+        }
+
+        currentCourse.finalTest = new FinalTestModel();
+        DataManager.NormalizeFinalTestDefaults(currentCourse.finalTest);
+        DataManager.SaveCourses(coursesContainer);
+
+        if (instantiated.TryGetValue(FinalTestTaskItemId, out var go))
+            go.GetComponent<TaskItem>()?.UpdateTitle(GetFinalTestDisplayTitle());
+
+        selectedTaskId = -1;
+        RefreshUI();
+        UpdateButtons();
+        Debug.Log($"TasksListManager: final test deleted for course id={currentCourse.id}");
+    }
+
     private void TryAutoAssignOptionalButtons()
     {
         if (buttonAddFinalTest == null)
-            buttonAddFinalTest = FindButtonInChildren("AddFinalTestBtn", "EditFinalTestBtn", "ButtonAddFinalTest", "ButtonEditFinalTest");
+            buttonAddFinalTest = FindButtonInChildren("AddFinalTestBtn", "ButtonAddFinalTest");
+        if (buttonEditFinalTest == null)
+            buttonEditFinalTest = FindButtonInChildren("EditFinalTestBtn", "ButtonEditFinalTest");
+        if (buttonDeleteFinalTest == null)
+            buttonDeleteFinalTest = FindButtonInChildren("DeleteFinalTestBtn", "ButtonDeleteFinalTest");
     }
 
     private Button FindButtonInChildren(params string[] names)
@@ -300,6 +348,11 @@ public class TasksListManager : MonoBehaviour
 
     private void OnDeleteTaskClicked()
     {
+        if (selectedTaskId == FinalTestTaskItemId)
+        {
+            OnDeleteFinalTestClicked();
+            return;
+        }
         if (selectedTaskId < 0) return;
         // удаляем задачу из списков
         var courseId = currentCourse != null ? currentCourse.id : -1;
@@ -318,6 +371,12 @@ public class TasksListManager : MonoBehaviour
 
     private void OnEditTaskClicked()
     {
+        if (selectedTaskId == FinalTestTaskItemId)
+        {
+            OnEditFinalTestClicked();
+            return;
+        }
+
         if (selectedTaskId < 0) return;
 
         var task = FindTaskInCurrentCourse(selectedTaskId);

@@ -1,4 +1,6 @@
+using System.Linq;
 using UnityEngine;
+using MyGame.Data;
 using MyGame.Models;
 
 [RequireComponent(typeof(NPCIdentity))]
@@ -9,6 +11,8 @@ public class NPCInteractable : MonoBehaviour
 
     public string DisplayName => GetComponent<NPCIdentity>()?.DisplayName ?? gameObject.name;
     public string Guid => GetComponent<NPCIdentity>()?.Guid ?? "";
+
+    private const string AllTasksCompletedMessage = "Задания окончены, тебе следует подойти к порталу и нажать на него E чтобы пройти итоговый тест на знания теории.";
 
     [Header("Optional bindings")]
     [SerializeField] private QuizPanelController quizPanelReference;
@@ -62,7 +66,23 @@ public class NPCInteractable : MonoBehaviour
             return;
         }
 
+        if (AreSelectedCourseTasksCompleted())
+        {
+            DialogueUI.Instance?.Show(DisplayName, AllTasksCompletedMessage);
+            return;
+        }
+
         DialogueUI.Instance?.Show(DisplayName, "(empty dialog)");
+    }
+
+    private static bool AreSelectedCourseTasksCompleted()
+    {
+        var gameState = GameState.Instance;
+        if (gameState == null) return false;
+
+        int selectedCourseId = gameState.GetData().selectedCourseId;
+        var course = DataManager.LoadCourses()?.courses?.FirstOrDefault(c => c != null && c.id == selectedCourseId);
+        return FinalTestController.AreAllCourseTasksCompleted(course);
     }
 
     public void ConfirmStartTask()
