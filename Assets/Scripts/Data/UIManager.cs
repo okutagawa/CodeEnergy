@@ -16,6 +16,7 @@ public class UIManager : MonoBehaviour
     [Header("Optional / child panels")]
     public GameObject taskEditorPanel; 
     public GameObject editCoursePanel;
+    public GameObject finalTestEditorPanel;
 
     // внутренние кэши для быстрого доступа к контроллерам
     private CourseListManager _courseListManager;
@@ -70,6 +71,23 @@ public class UIManager : MonoBehaviour
             var taskEditor = FindObjectOfType<TaskEditorController>(true);
             if (taskEditor != null)
                 taskEditorPanel = taskEditor.gameObject;
+        }
+
+        if (finalTestEditorPanel == null)
+        {
+            var finalTestEditor = FindObjectOfType<FinalTestEditorPanelController>(true);
+            if (finalTestEditor != null)
+                finalTestEditorPanel = finalTestEditor.gameObject;
+            else
+            {
+                var finalTestEditorObject = FindSceneGameObject("FinalTestEditorPanel");
+                if (finalTestEditorObject != null)
+                {
+                    finalTestEditor = finalTestEditorObject.GetComponent<FinalTestEditorPanelController>()
+                                      ?? finalTestEditorObject.AddComponent<FinalTestEditorPanelController>();
+                    finalTestEditorPanel = finalTestEditor.gameObject;
+                }
+            }
         }
     }
 
@@ -138,7 +156,8 @@ public class UIManager : MonoBehaviour
             coursesPanel,
             tasksPanel,
             taskEditorPanel,
-            editCoursePanel
+            editCoursePanel,
+            finalTestEditorPanel
         };
 
         foreach (var p in all)
@@ -332,6 +351,52 @@ public class UIManager : MonoBehaviour
         // И последний вариант — поиск среди всех GameObject (включая неактивные)
         var all = Resources.FindObjectsOfTypeAll<TaskEditorController>();
         if (all != null && all.Length > 0) return all[0];
+
+        return null;
+    }
+
+    public FinalTestEditorPanelController GetFinalTestEditorPanelController()
+    {
+        if (finalTestEditorPanel != null)
+        {
+            var ctrl = finalTestEditorPanel.GetComponentInChildren<FinalTestEditorPanelController>(true);
+            if (ctrl != null) return ctrl;
+        }
+
+        var found = FindObjectOfType<FinalTestEditorPanelController>(true);
+        if (found != null) return found;
+
+        var finalTestEditorObject = FindSceneGameObject("FinalTestEditorPanel");
+        if (finalTestEditorObject != null)
+            return finalTestEditorObject.GetComponent<FinalTestEditorPanelController>()
+                   ?? finalTestEditorObject.AddComponent<FinalTestEditorPanelController>();
+
+        var all = Resources.FindObjectsOfTypeAll<FinalTestEditorPanelController>();
+        return all != null && all.Length > 0 ? all[0] : null;
+    }
+
+    public void OpenFinalTestEditorForCourse(int courseId)
+    {
+        ResolveRuntimePanelReferences();
+        var editor = GetFinalTestEditorPanelController();
+        if (editor == null)
+        {
+            Debug.LogError("UIManager: FinalTestEditorPanelController not found in scene");
+            return;
+        }
+
+        finalTestEditorPanel = editor.gameObject;
+        ShowOnly(finalTestEditorPanel);
+        editor.OpenForCourse(courseId);
+    }
+
+    private static GameObject FindSceneGameObject(string objectName)
+    {
+        var transforms = Resources.FindObjectsOfTypeAll<Transform>();
+        foreach (var t in transforms)
+        {
+            if (t != null && t.name == objectName) return t.gameObject;
+        }
 
         return null;
     }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,6 +36,8 @@ public class QuizPanelController : MonoBehaviour
     private NPCInteractable _sourceNpc;
     private float _openedAtUnscaledTime;
     private bool _hintPurchasedForCurrentQuiz;
+    private bool _isFinalTestMode;
+    private Action<bool> _finalTestAnswerCallback;
 
     private void Awake()
     {
@@ -71,7 +74,24 @@ public class QuizPanelController : MonoBehaviour
 
     public void Show(QuizTask task, NPCInteractable sourceNpc = null)
     {
+        _isFinalTestMode = false;
+        _finalTestAnswerCallback = null;
         _sourceNpc = sourceNpc;
+        _task = task;
+        _openedAtUnscaledTime = Time.unscaledTime;
+        _hintPurchasedForCurrentQuiz = false;
+        CloseHintPanel();
+        RefreshHintButton();
+        gameObject.SetActive(true);
+        StopAllCoroutines();
+        StartCoroutine(ShowRoutine(task));
+    }
+
+    public void ShowFinalTestQuestion(QuizTask task, Action<bool> answerCallback)
+    {
+        _isFinalTestMode = true;
+        _finalTestAnswerCallback = answerCallback;
+        _sourceNpc = null;
         _task = task;
         _openedAtUnscaledTime = Time.unscaledTime;
         _hintPurchasedForCurrentQuiz = false;
@@ -159,7 +179,13 @@ public class QuizPanelController : MonoBehaviour
         }
 
         if (submitButton != null) submitButton.interactable = false;
-        if (nextButton != null) nextButton.gameObject.SetActive(true);
+        if (nextButton != null) nextButton.gameObject.SetActive(!_isFinalTestMode);
+
+        if (_isFinalTestMode)
+        {
+            StartCoroutine(NotifyFinalTestAnswerRoutine(isCorrect));
+            return;
+        }
 
         var gameState = GameState.Instance;
         if (gameState == null)
@@ -208,6 +234,13 @@ public class QuizPanelController : MonoBehaviour
             gameState.ClearQuizProgress(_task.taskId);
             ClosePanel();
         }
+    }
+
+    private IEnumerator NotifyFinalTestAnswerRoutine(bool isCorrect)
+    {
+        yield return new WaitForSecondsRealtime(0.5f);
+        var callback = _finalTestAnswerCallback;
+        callback?.Invoke(isCorrect);
     }
 
     private int CalculateStarsForCompletion(int failedAttemptsBeforeSuccess, float completionSeconds)
@@ -380,6 +413,8 @@ public class QuizPanelController : MonoBehaviour
     {
         _task = null;
         _sourceNpc = null;
+        _isFinalTestMode = false;
+        _finalTestAnswerCallback = null;
         _hintPurchasedForCurrentQuiz = false;
         SetHintButtonVisible(false);
         CloseHintPanel();
@@ -390,6 +425,8 @@ public class QuizPanelController : MonoBehaviour
     {
         _task = null;
         _sourceNpc = null;
+        _isFinalTestMode = false;
+        _finalTestAnswerCallback = null;
         _hintPurchasedForCurrentQuiz = false;
         SetHintButtonVisible(false);
         CloseHintPanel();

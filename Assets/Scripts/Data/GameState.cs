@@ -113,6 +113,32 @@ public class GameState : MonoBehaviour
         }
     }
 
+    public void MarkWorldEventCompleted(string worldEvent)
+    {
+        worldEvent = WorldEventKey.Normalize(worldEvent);
+        if (worldEvent == WorldEventKey.None) return;
+
+        var d = GetData();
+        if (d.completedWorldEvents == null)
+            d.completedWorldEvents = new System.Collections.Generic.List<string>();
+
+        if (d.completedWorldEvents.Contains(worldEvent))
+            return;
+
+        d.completedWorldEvents.Add(worldEvent);
+        SaveState();
+
+        try
+        {
+            OnWorldEventCompleted?.Invoke(worldEvent);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[GameState] Exception in OnWorldEventCompleted: {ex}");
+        }
+    }
+
+
     public bool IsWorldEventCompleted(string worldEvent)
     {
         worldEvent = WorldEventKey.Normalize(worldEvent);

@@ -21,7 +21,9 @@ namespace MyGame.Data
             try
             {
                 var json = File.ReadAllText(CoursesFilePath);
-                return JsonUtility.FromJson<CoursesContainer>(json) ?? new CoursesContainer();
+                var container = JsonUtility.FromJson<CoursesContainer>(json) ?? new CoursesContainer();
+                NormalizeCourseDefaults(container);
+                return container;
             }
             catch
             {
@@ -36,7 +38,9 @@ namespace MyGame.Data
 
             try
             {
-                var json = JsonUtility.ToJson(container ?? new CoursesContainer(), true);
+                var safeContainer = container ?? new CoursesContainer();
+                NormalizeCourseDefaults(safeContainer);
+                var json = JsonUtility.ToJson(safeContainer, true);
                 SaveService.SaveFile(SaveService.CoursesFileName, json);
                 Debug.Log("DataManager: courses saved to " + CoursesFilePath);
             }
@@ -44,6 +48,49 @@ namespace MyGame.Data
             {
                 Debug.LogError("DataManager: error while saving courses " + ex);
             }
+        }
+
+        public static void NormalizeCourseDefaults(CoursesContainer container)
+        {
+            if (container?.courses == null) return;
+
+            foreach (var course in container.courses)
+            {
+                if (course == null) continue;
+                if (course.taskIds == null) course.taskIds = new List<int>();
+                if (course.finalTest == null) course.finalTest = new FinalTestModel();
+                NormalizeFinalTestDefaults(course.finalTest);
+            }
+        }
+
+        public static void NormalizeFinalTestDefaults(FinalTestModel finalTest)
+        {
+            if (finalTest == null) return;
+            if (finalTest.title == null) finalTest.title = string.Empty;
+            if (finalTest.questions == null) finalTest.questions = new List<FinalTestQuestionModel>();
+
+            foreach (var question in finalTest.questions)
+            {
+                if (question == null) continue;
+                if (question.questionText == null) question.questionText = string.Empty;
+                if (question.answers == null) question.answers = new List<string>();
+                if (question.correctAnswerIndexes == null) question.correctAnswerIndexes = new List<int>();
+
+                if (question.answerCount <= 0)
+                    question.answerCount = question.answers.Count > 0 ? question.answers.Count : 4;
+
+                question.answerCount = Mathf.Clamp(question.answerCount, 2, 5);
+                question.correctAnswerIndexes = question.correctAnswerIndexes
+                    .Where(index => index >= 0 && index < question.answerCount)
+                    .Distinct()
+                    .ToList();
+            }
+
+            var questionCount = finalTest.questions.Count;
+            if (questionCount <= 0)
+                finalTest.requiredCorrectAnswers = 0;
+            else
+                finalTest.requiredCorrectAnswers = Mathf.Clamp(finalTest.requiredCorrectAnswers <= 0 ? 1 : finalTest.requiredCorrectAnswers, 1, questionCount);
         }
 
         public static int NextCourseId(CoursesContainer container)

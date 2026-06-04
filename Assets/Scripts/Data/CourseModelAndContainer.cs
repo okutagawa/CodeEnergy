@@ -8,6 +8,7 @@ namespace MyGame.Models
         public int id;
         public string name;
         public List<int> taskIds = new List<int>();
+        public FinalTestModel finalTest = new FinalTestModel();
     }
 
     [System.Serializable]

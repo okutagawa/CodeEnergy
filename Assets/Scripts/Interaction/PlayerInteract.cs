@@ -15,6 +15,7 @@ public class PlayerInteract : MonoBehaviour
     private NPCInteractable currentHoveredNpc;
     private Outline currentOutline;
     private Collider currentHoveredCollider;
+    private FinalTestPortalInteractable currentHoveredPortal;
 
     // pause flag
     private bool isPaused = false;
@@ -33,7 +34,7 @@ public class PlayerInteract : MonoBehaviour
 
     private void TryInteract()
     {
-        if (currentHoveredNpc == null || currentHoveredCollider == null)
+        if ((currentHoveredNpc == null && currentHoveredPortal == null) || currentHoveredCollider == null)
             return;
 
         var cameraTransform = Camera.main != null ? Camera.main.transform : transform;
@@ -45,7 +46,8 @@ public class PlayerInteract : MonoBehaviour
         if (distance > interactRange)
             return;
 
-        currentHoveredNpc.Interact();
+        if (currentHoveredNpc != null) currentHoveredNpc.Interact();
+        else currentHoveredPortal?.Interact();
     }
 
     private void UpdateHover()
@@ -60,17 +62,20 @@ public class PlayerInteract : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, hoverRange, hoverMask))
         {
             var npc = ResolveNpcInteractable(hit.collider);
-            if (npc != null)
+            var portal = ResolveFinalTestPortalInteractable(hit.collider);
+            if (npc != currentHoveredNpc || portal != currentHoveredPortal)
             {
                 if (npc != currentHoveredNpc)
                 {
                     ClearCurrentOutline();
 
                     currentHoveredNpc = npc;
+                    currentHoveredPortal = portal;
                     currentHoveredCollider = hit.collider;
-                    currentOutline = currentHoveredNpc.GetComponent<Outline>()
-                                     ?? currentHoveredNpc.GetComponentInChildren<Outline>()
-                                     ?? currentHoveredNpc.GetComponentInParent<Outline>();
+                    var outlineSource = currentHoveredNpc != null ? currentHoveredNpc.gameObject : currentHoveredPortal.gameObject;
+                    currentOutline = outlineSource.GetComponent<Outline>()
+                                     ?? outlineSource.GetComponentInChildren<Outline>()
+                                     ?? outlineSource.GetComponentInParent<Outline>();
                     if (currentOutline != null)
                     {
                         currentOutline.enabled = true;
@@ -99,6 +104,7 @@ public class PlayerInteract : MonoBehaviour
 
         currentHoveredCollider = null;
         currentHoveredNpc = null;
+        currentHoveredPortal = null;
     }
 
     private static NPCInteractable ResolveNpcInteractable(Collider hitCollider)
@@ -109,6 +115,22 @@ public class PlayerInteract : MonoBehaviour
         return hitCollider.GetComponent<NPCInteractable>()
                ?? hitCollider.GetComponentInParent<NPCInteractable>()
                ?? hitCollider.GetComponentInChildren<NPCInteractable>();
+    }
+
+    private static FinalTestPortalInteractable ResolveFinalTestPortalInteractable(Collider hitCollider)
+    {
+        if (hitCollider == null)
+            return null;
+
+        var interactable = hitCollider.GetComponent<FinalTestPortalInteractable>()
+               ?? hitCollider.GetComponentInParent<FinalTestPortalInteractable>()
+               ?? hitCollider.GetComponentInChildren<FinalTestPortalInteractable>();
+        if (interactable != null) return interactable;
+
+        var portalState = hitCollider.GetComponent<PortalStateByTasks>()
+               ?? hitCollider.GetComponentInParent<PortalStateByTasks>()
+               ?? hitCollider.GetComponentInChildren<PortalStateByTasks>();
+        return portalState != null ? portalState.gameObject.AddComponent<FinalTestPortalInteractable>() : null;
     }
 
     // Pause handler

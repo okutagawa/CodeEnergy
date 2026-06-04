@@ -16,6 +16,7 @@ public class TasksListManager : MonoBehaviour
     public Button buttonDeleteTask;
     public Button buttonSave;
     public Button buttonExit;
+    public Button buttonAddFinalTest;
 
     private CoursesContainer coursesContainer;
     private List<TaskModel> allTasks;
@@ -25,11 +26,13 @@ public class TasksListManager : MonoBehaviour
 
     private void OnEnable()
     {
+        TryAutoAssignOptionalButtons();
         if (buttonAddTask != null) buttonAddTask.onClick.AddListener(OnAddTaskClicked);
         if (buttonDeleteTask != null) buttonDeleteTask.onClick.AddListener(OnDeleteTaskClicked);
         if (buttonSave != null) buttonSave.onClick.AddListener(OnSaveClicked);
         if (buttonExit != null) buttonExit.onClick.AddListener(OnExitClicked);
         if (buttonEditTask != null) buttonEditTask.onClick.AddListener(OnEditTaskClicked);
+        if (buttonAddFinalTest != null) buttonAddFinalTest.onClick.AddListener(OnEditFinalTestClicked);
     }
 
     private void OnDisable()
@@ -39,6 +42,7 @@ public class TasksListManager : MonoBehaviour
         if (buttonSave != null) buttonSave.onClick.RemoveListener(OnSaveClicked);
         if (buttonExit != null) buttonExit.onClick.RemoveListener(OnExitClicked);
         if (buttonEditTask != null) buttonEditTask.onClick.RemoveListener(OnEditTaskClicked);
+        if (buttonAddFinalTest != null) buttonAddFinalTest.onClick.RemoveListener(OnEditFinalTestClicked);
     }
 
     // Вызывается из UIManager.OpenTasksWindowForCourse(courseId)
@@ -207,6 +211,56 @@ public class TasksListManager : MonoBehaviour
         }
         editor.OpenForCourseEditor(currentCourse.id);
     }
+
+    private void OnEditFinalTestClicked()
+    {
+        if (currentCourse == null)
+        {
+            Debug.LogError("TasksListManager.OnEditFinalTestClicked: currentCourse is null");
+            return;
+        }
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.OpenFinalTestEditorForCourse(currentCourse.id);
+            return;
+        }
+
+        var editor = FindObjectOfType<FinalTestEditorPanelController>(true);
+        if (editor == null)
+        {
+            Debug.LogError("TasksListManager: FinalTestEditorPanelController not found.");
+            return;
+        }
+
+        editor.gameObject.SetActive(true);
+        editor.OpenForCourse(currentCourse.id);
+    }
+
+    private void TryAutoAssignOptionalButtons()
+    {
+        if (buttonAddFinalTest == null)
+            buttonAddFinalTest = FindButtonInChildren("AddFinalTestBtn", "EditFinalTestBtn", "ButtonAddFinalTest", "ButtonEditFinalTest");
+    }
+
+    private Button FindButtonInChildren(params string[] names)
+    {
+        foreach (var name in names)
+        {
+            var transforms = GetComponentsInChildren<Transform>(true);
+            foreach (var t in transforms)
+            {
+                if (t != null && t.name == name)
+                {
+                    var button = t.GetComponent<Button>();
+                    if (button != null) return button;
+                }
+            }
+        }
+
+        return null;
+    }
+
 
     private void OnDeleteTaskClicked()
     {
