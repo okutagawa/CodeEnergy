@@ -179,7 +179,7 @@ public class QuizPanelController : MonoBehaviour
         }
 
         if (submitButton != null) submitButton.interactable = false;
-        if (nextButton != null) nextButton.gameObject.SetActive(!_isFinalTestMode);
+        if (nextButton != null) nextButton.gameObject.SetActive(!_isFinalTestMode && isCorrect);
 
         if (_isFinalTestMode)
         {
@@ -197,6 +197,10 @@ public class QuizPanelController : MonoBehaviour
         if (!isCorrect)
         {
             gameState.RegisterFailedQuizAttempt(_task.taskId);
+            if (!ShowRewardFailurePanel() && nextButton != null)
+            {
+                nextButton.gameObject.SetActive(true);
+            }
             return;
         }
 
@@ -222,7 +226,7 @@ public class QuizPanelController : MonoBehaviour
             if (rewardPanelPrefab != null)
             {
                 var reward = Instantiate(rewardPanelPrefab, transform.parent);
-                reward.Show("Задание выполнено!", starsAwarded);
+                reward.ShowSuccess(" ", starsAwarded, failedAttempts);
             }
             else
             {
@@ -234,6 +238,16 @@ public class QuizPanelController : MonoBehaviour
             gameState.ClearQuizProgress(_task.taskId);
             ClosePanel();
         }
+    }
+
+    private bool ShowRewardFailurePanel()
+    {
+        if (rewardPanelPrefab == null)
+            return false;
+
+        var reward = Instantiate(rewardPanelPrefab, transform.parent);
+        reward.ShowFailure();
+        return true;
     }
 
     private IEnumerator NotifyFinalTestAnswerRoutine(bool isCorrect)
@@ -431,6 +445,23 @@ public class QuizPanelController : MonoBehaviour
         SetHintButtonVisible(false);
         CloseHintPanel();
         gameObject.SetActive(false);
+    }
+
+    public void RetryCurrentTaskFromReward()
+    {
+        if (_task == null)
+        {
+            ForceCloseFromReward();
+            return;
+        }
+
+        _openedAtUnscaledTime = Time.unscaledTime;
+        _hintPurchasedForCurrentQuiz = false;
+        CloseHintPanel();
+        RefreshHintButton();
+        gameObject.SetActive(true);
+        StopAllCoroutines();
+        StartCoroutine(ShowRoutine(_task));
     }
 
     private void ClearCards()
