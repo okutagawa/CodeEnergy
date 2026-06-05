@@ -138,10 +138,10 @@ MonoBehaviour:
   choiceText: {fileID: 7033232487077847410}
   selectionMark: {fileID: 0}
   stateIcon: {fileID: 0}
-  textColorDefault: {r: 0, g: 0, b: 0, a: 1}
+  textColorDefault: {r: 1, g: 1, b: 1, a: 1}
   textColorSelected: {r: 1, g: 1, b: 1, a: 1}
   bgColorDefault: {r: 0.75, g: 0.75, b: 0.75, a: 1}
-  bgColorSelected: {r: 0.25, g: 0.5, b: 0.25, a: 1}
+  bgColorSelected: {r: 0.6065326, g: 0.8867924, b: 0.6065326, a: 1}
   useOutlineToggle: 0
   OnClicked:
     m_PersistentCalls:
@@ -181,7 +181,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -0.0006504059, y: 0}
-  m_SizeDelta: {x: 148.74, y: 268.52}
+  m_SizeDelta: {x: 136.74, y: 236.52}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2764593710492897298
 CanvasRenderer:
@@ -212,8 +212,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_Font: {fileID: 12800000, guid: 1b16fac80e8465c4f94bdf8815c0ae9d, type: 3}
+    m_FontSize: 11
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
