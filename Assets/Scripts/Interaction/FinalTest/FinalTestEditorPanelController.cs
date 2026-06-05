@@ -9,6 +9,7 @@ public class FinalTestEditorPanelController : MonoBehaviour
 {
     private const int MinAnswerCount = 2;
     private const int MaxAnswerCount = 5;
+    private const int MaxQuestionPreviewCharacters = 8;
 
     [SerializeField] private InputField inputTestTitle;
     [SerializeField] private Dropdown dropdownRequiredCorrect;
@@ -177,12 +178,60 @@ public class FinalTestEditorPanelController : MonoBehaviour
         {
             var row = questionItemPrefab != null ? Instantiate(questionItemPrefab, questionsContent) : new GameObject("FinalTestQuestionItem", typeof(RectTransform), typeof(Button), typeof(Text));
             int index = i;
-            var text = row.GetComponentInChildren<Text>(true);
-            if (text != null) text.text = $"{i + 1}. {_draft.questions[i].questionText}";
+            SetQuestionRowText(row, i + 1, _draft.questions[i].questionText);
             var button = row.GetComponent<Button>() ?? row.GetComponentInChildren<Button>(true);
             if (button != null) button.onClick.AddListener(() => SelectQuestion(index));
             _spawnedQuestionRows.Add(row);
         }
+    }
+
+    private void SetQuestionRowText(GameObject row, int questionNumber, string questionText)
+    {
+        if (row == null) return;
+
+        var orderText = FindTextInChildren(row, "Text_OrderNumber");
+        var previewText = FindTextInChildren(row, "Text_QuestionPreview");
+
+        if (orderText != null)
+        {
+            orderText.text = $"{questionNumber}.";
+            orderText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            orderText.verticalOverflow = VerticalWrapMode.Truncate;
+        }
+
+        if (previewText != null)
+        {
+            previewText.text = TruncateQuestionPreview(questionText);
+            previewText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            previewText.verticalOverflow = VerticalWrapMode.Truncate;
+            return;
+        }
+
+        var fallbackText = row.GetComponentInChildren<Text>(true);
+        if (fallbackText != null)
+        {
+            fallbackText.text = $"{questionNumber}. {TruncateQuestionPreview(questionText)}";
+            fallbackText.verticalOverflow = VerticalWrapMode.Truncate;
+        }
+    }
+
+    private Text FindTextInChildren(GameObject root, string childName)
+    {
+        foreach (var text in root.GetComponentsInChildren<Text>(true))
+        {
+            if (text != null && text.name == childName) return text;
+        }
+        return null;
+    }
+
+    private string TruncateQuestionPreview(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+
+        value = value.Trim();
+        if (value.Length <= MaxQuestionPreviewCharacters) return value;
+
+        return value.Substring(0, MaxQuestionPreviewCharacters).TrimEnd() + "...";
     }
 
     private void RebuildRequiredCorrectOptions()
