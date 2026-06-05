@@ -31,7 +31,7 @@ public class RewardPanelController : MonoBehaviour
 
         int safeStars = Mathf.Max(0, starsCount);
         int safeAttempts = Mathf.Max(0, failedAttemptsBeforeSuccess);
-        string resolvedTitle = string.IsNullOrEmpty(title) ? " " : title;
+        string resolvedTitle = string.IsNullOrWhiteSpace(title) ? "Задание выполнено!" : title;
         string resolvedStatus = BuildSuccessStatus(safeStars, safeAttempts);
 
         ApplyText(resolvedTitle, resolvedStatus);
@@ -45,9 +45,9 @@ public class RewardPanelController : MonoBehaviour
     {
         _closeQuizOnClose = false;
 
-        string resolvedTitle = string.IsNullOrEmpty(title) ? "  " : title;
-        string resolvedStatus = string.IsNullOrEmpty(status)
-            ? " .            ."
+        string resolvedTitle = string.IsNullOrWhiteSpace(title) ? "Задание не выполнено" : title;
+        string resolvedStatus = string.IsNullOrWhiteSpace(status)
+            ? "Ответ неверный. Попробуйте ещё раз."
             : status;
 
         ApplyText(resolvedTitle, resolvedStatus);
@@ -69,11 +69,10 @@ public class RewardPanelController : MonoBehaviour
 
         if (failedAttemptsBeforeSuccess > 0)
         {
-            string attemptsWord = GetAttemptsWord(failedAttemptsBeforeSuccess);
-            return $"  .  {failedAttemptsBeforeSuccess} {attemptsWord}  :   {starsCount} {starsWord}.";
+            return $"Готово! Ошибок до успеха: {failedAttemptsBeforeSuccess}. Награда: {starsCount} {starsWord}.";
         }
 
-        return $"  .   {starsCount} {starsWord}.";
+        return $"Готово! Награда: {starsCount} {starsWord}.";
     }
 
     private string GetStarsWord(int starsCount)
@@ -81,21 +80,10 @@ public class RewardPanelController : MonoBehaviour
         int value = Mathf.Abs(starsCount) % 100;
         int lastDigit = value % 10;
 
-        if (value >= 11 && value <= 14) return "";
-        if (lastDigit == 1) return "";
-        if (lastDigit >= 2 && lastDigit <= 4) return "";
-        return "";
-    }
-
-    private string GetAttemptsWord(int attemptsCount)
-    {
-        int value = Mathf.Abs(attemptsCount) % 100;
-        int lastDigit = value % 10;
-
-        if (value >= 11 && value <= 14) return " ";
-        if (lastDigit == 1) return " ";
-        if (lastDigit >= 2 && lastDigit <= 4) return " ";
-        return " ";
+        if (value >= 11 && value <= 14) return "звёзд";
+        if (lastDigit == 1) return "звезда";
+        if (lastDigit >= 2 && lastDigit <= 4) return "звезды";
+        return "звёзд";
     }
 
     private void SetStarsVisible(int starsCount)
