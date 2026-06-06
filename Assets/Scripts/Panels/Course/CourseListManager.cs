@@ -41,7 +41,8 @@ public class CourseListManager : MonoBehaviour
             buttonAddCourse.onClick.RemoveAllListeners();
             buttonAddCourse.onClick.AddListener(OnAddCourseClicked);
         }
-        if (buttonDeleteSelected != null) buttonDeleteSelected.onClick.AddListener(DeleteSelectedCourse);
+        if (buttonDeleteSelected != null) { buttonDeleteSelected.onClick.RemoveAllListeners(); buttonDeleteSelected.onClick.AddListener(DeleteSelectedCourse); }
+        if (buttonEditSelected != null) { buttonEditSelected.onClick.RemoveAllListeners(); buttonEditSelected.onClick.AddListener(OnEditSelectedCourseClicked); }
         if (buttonExit != null)
         {
             buttonExit.onClick.RemoveAllListeners();
@@ -189,6 +190,9 @@ public class CourseListManager : MonoBehaviour
             return;
         }
 
+        if (container == null) container = DataManager.LoadCourses();
+        if (container.courses == null) container.courses = new List<CourseModel>();
+
         var model = new CourseModel { id = DataManager.NextCourseId(container), name = title };
         container.courses.Add(model);
         AddCourseToUI(model);
@@ -198,9 +202,22 @@ public class CourseListManager : MonoBehaviour
 
     void AddCourseToUI(CourseModel c)
     {
+        if (c == null) return;
+        if (prefabCourseItem == null || contentCourses == null)
+        {
+            SetStatus("Course list Content or Prefab is not assigned.", true);
+            Debug.LogError("CourseListManager.AddCourseToUI: prefabCourseItem/contentCourses is not assigned");
+            return;
+        }
         var go = Instantiate(prefabCourseItem, contentCourses);
         var item = go.GetComponent<CourseItem>();
-        if (item == null) Debug.LogError("CourseListManager: prefabCourseItem missing CourseItem component");
+        if (item == null)
+        {
+            SetStatus("Course prefab is invalid: CourseItem component is missing.", true);
+            Debug.LogError("CourseListManager: prefabCourseItem missing CourseItem component");
+            Destroy(go);
+            return;
+        }
         item.Initialize(c);
         item.onSingleClick = OnCourseSingleClick;
         item.onDoubleClick = OnCourseDoubleClick;
@@ -235,6 +252,45 @@ public class CourseListManager : MonoBehaviour
         }
     }
 
+    private void OnEditSelectedCourseClicked()
+    {
+        if (selectedCourseId < 0)
+        {
+            SetStatus("Select a course to edit.", true);
+            return;
+        }
+
+        if (inputCourseName == null)
+        {
+            SetStatus("Course name input is not assigned.", true);
+            return;
+        }
+
+        if (container == null) container = DataManager.LoadCourses();
+        if (container.courses == null) container.courses = new List<CourseModel>();
+
+        var model = container.courses.Find(x => x != null && x.id == selectedCourseId);
+        if (model == null)
+        {
+            SetStatus("Selected course was not found.", true);
+            return;
+        }
+
+        var newTitle = inputCourseName.text.Trim();
+        if (string.IsNullOrEmpty(newTitle))
+        {
+            inputCourseName.text = model.name ?? string.Empty;
+            SetStatus("Enter a new course name and press edit again.", true);
+            return;
+        }
+
+        model.name = newTitle;
+        DataManager.SaveCourses(container);
+        RefreshUI();
+        SelectCourse(model.id);
+        SetStatus($"Course renamed: {model.name}");
+    }
+
     public void DeleteSelectedCourse()
     {
         if (selectedCourseId < 0)
@@ -243,7 +299,10 @@ public class CourseListManager : MonoBehaviour
             return;
         }
         if (selectedCourseId < 0) return;
-        var model = container.courses.Find(x => x.id == selectedCourseId);
+        if (container == null) container = DataManager.LoadCourses();
+        if (container.courses == null) container.courses = new List<CourseModel>();
+
+        var model = container.courses.Find(x => x != null && x.id == selectedCourseId);
         if (model == null)
         {
             SetStatus("Выбранный курс не найден.", true);
@@ -268,6 +327,7 @@ public class CourseListManager : MonoBehaviour
         foreach (var kv in instantiated.Values) Destroy(kv);
         instantiated.Clear();
         container = container ?? DataManager.LoadCourses();
+        if (container.courses == null) container.courses = new List<CourseModel>();
         foreach (var c in container.courses) AddCourseToUI(c);
     }
 

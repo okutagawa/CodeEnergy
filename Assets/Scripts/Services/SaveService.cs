@@ -209,9 +209,9 @@ public static class SaveService
         {
             if (string.IsNullOrWhiteSpace(json)) return (false, "File is empty.");
             var model = JsonUtility.FromJson<GameStateData>(json);
-            return model != null
-                ? (true, null)
-                : (false, "Could not parse GameStateData JSON.");
+            if (model == null) return (false, "Could not parse GameStateData JSON.");
+            model.Normalize();
+            return (true, null);
         }
         catch (Exception ex) { return (false, ex.Message); }
     }

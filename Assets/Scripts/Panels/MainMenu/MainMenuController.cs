@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
@@ -157,6 +158,25 @@ public class MainMenuController : MonoBehaviour
 
     private bool HasSaveFile()
     {
-        return SaveService.FileExists(SaveService.GameStateFileName);
+        var path = SaveService.GetPath(SaveService.GameStateFileName);
+        if (!File.Exists(path)) return false;
+
+        try
+        {
+            var json = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(json)) return false;
+
+            var validation = SaveService.ValidateGameStateJson(json);
+            if (!validation.ok) return false;
+
+            var data = JsonUtility.FromJson<GameStateData>(json);
+            data?.Normalize();
+            return data != null && data.selectedCourseId > 0;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[MainMenu] Save file is not readable: {ex.Message}");
+            return false;
+        }
     }
 }

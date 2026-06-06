@@ -60,15 +60,26 @@ public class TasksListManager : MonoBehaviour
         // загрузка моделей
         coursesContainer = DataManager.LoadCourses();
         allTasks = DataManager.LoadTasks();
-        currentCourse = coursesContainer.courses.Find(c => c.id == courseId);
-        if (currentCourse == null)
+        if (coursesContainer == null || coursesContainer.courses == null)
         {
-            Debug.LogError("TasksListManager: course not found " + courseId);
-            textCourseTitle.text = $"(course {courseId} not found)";
+            Debug.LogError("TasksListManager: courses data is unavailable");
+            if (textCourseTitle != null) textCourseTitle.text = "Courses data not found";
             return;
         }
 
-        textCourseTitle.text = currentCourse.name;
+        currentCourse = coursesContainer.courses.Find(c => c != null && c.id == courseId);
+        if (currentCourse == null)
+        {
+            Debug.LogError("TasksListManager: course not found " + courseId);
+            if (textCourseTitle != null) textCourseTitle.text = $"(course {courseId} not found)";
+            return;
+        }
+
+        if (currentCourse.taskIds == null) currentCourse.taskIds = new List<int>();
+        if (currentCourse.finalTest == null) currentCourse.finalTest = new FinalTestModel();
+        DataManager.NormalizeFinalTestDefaults(currentCourse.finalTest);
+
+        if (textCourseTitle != null) textCourseTitle.text = currentCourse.name;
         selectedTaskId = -1;
         RefreshUI();
         UpdateButtons();
@@ -100,6 +111,8 @@ public class TasksListManager : MonoBehaviour
         }
 
         // создаём TaskItem в том порядке, как в currentCourse.taskIds
+        if (currentCourse.taskIds == null) currentCourse.taskIds = new List<int>();
+
         foreach (var id in currentCourse.taskIds)
         {
             var t = FindTaskInCurrentCourse(id);
@@ -356,6 +369,9 @@ public class TasksListManager : MonoBehaviour
         if (selectedTaskId < 0) return;
         // удаляем задачу из списков
         var courseId = currentCourse != null ? currentCourse.id : -1;
+        if (allTasks == null) allTasks = DataManager.LoadTasks();
+        if (currentCourse == null) return;
+        if (currentCourse.taskIds == null) currentCourse.taskIds = new List<int>();
         allTasks.RemoveAll(x => x != null && x.id == selectedTaskId && (x.courseId == courseId || x.courseId <= 0));
         currentCourse.taskIds.RemoveAll(x => x == selectedTaskId);
 
