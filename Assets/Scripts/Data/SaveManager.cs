@@ -11,6 +11,7 @@ public static class SaveManager
         SaveService.EnsureWorkingFiles();
 
         if (data == null) return;
+        data.Normalize();
         data.lastSavedIso = DateTime.Now.ToString("O");
         try
         {
@@ -40,7 +41,13 @@ public static class SaveManager
             }
 
             var json = File.ReadAllText(FilePath);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                Debug.LogWarning($"[SaveManager] Save file is empty: {FilePath}. Returning new GameStateData.");
+                return new GameStateData();
+            }
             var data = JsonUtility.FromJson<GameStateData>(json) ?? new GameStateData();
+            data.Normalize();
             Debug.Log($"[SaveManager] Loaded gamestate from {FilePath}");
             return data;
         }

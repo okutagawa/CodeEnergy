@@ -38,6 +38,7 @@ public class GameState : MonoBehaviour
     public void LoadState()
     {
         _data = SaveManager.Load() ?? new GameStateData();
+        _data.Normalize();
         Debug.Log("[GameState] State loaded");
         NotifyTotalStarsChanged();
     }
@@ -45,18 +46,21 @@ public class GameState : MonoBehaviour
     public void SaveState()
     {
         if (_data == null) _data = new GameStateData();
+        _data.Normalize();
         SaveManager.Save(_data);
     }
 
     public GameStateData GetData()
     {
         if (_data == null) _data = new GameStateData();
+        _data.Normalize();
         return _data;
     }
 
     public void ApplyData(GameStateData data)
     {
         _data = data ?? new GameStateData();
+        _data.Normalize();
         NotifyTotalStarsChanged();
     }
 
@@ -70,8 +74,7 @@ public class GameState : MonoBehaviour
     {
         worldEvent = WorldEventKey.Normalize(worldEvent);
         var d = GetData();
-        if (d.completedWorldEvents == null) d.completedWorldEvents = new System.Collections.Generic.List<string>();
-
+        
         bool isNew = !d.completedTaskIds.Contains(taskId);
         if (isNew)
         {
@@ -119,9 +122,7 @@ public class GameState : MonoBehaviour
         if (worldEvent == WorldEventKey.None) return;
 
         var d = GetData();
-        if (d.completedWorldEvents == null)
-            d.completedWorldEvents = new System.Collections.Generic.List<string>();
-
+        
         if (d.completedWorldEvents.Contains(worldEvent))
             return;
 
@@ -157,18 +158,20 @@ public class GameState : MonoBehaviour
     public void SetGiverQueue(string npcGuid, System.Collections.Generic.List<int> taskIds)
     {
         var d = GetData();
+        var safeTaskIds = taskIds ?? new System.Collections.Generic.List<int>();
         var entry = d.giverQueues.Find(e => e.npcGuid == npcGuid);
-        if (entry == null) { entry = new GameStateData.NpcQueueEntry { npcGuid = npcGuid, taskIds = new System.Collections.Generic.List<int>(taskIds) }; d.giverQueues.Add(entry); }
-        else { entry.taskIds = new System.Collections.Generic.List<int>(taskIds); }
+        if (entry == null) { entry = new GameStateData.NpcQueueEntry { npcGuid = npcGuid, taskIds = new System.Collections.Generic.List<int>(safeTaskIds) }; d.giverQueues.Add(entry); }
+        else { entry.taskIds = new System.Collections.Generic.List<int>(safeTaskIds); }
         SaveState();
     }
 
     public void SetReceiverQueue(string npcGuid, System.Collections.Generic.List<int> taskIds)
     {
         var d = GetData();
+        var safeTaskIds = taskIds ?? new System.Collections.Generic.List<int>();
         var entry = d.receiverQueues.Find(e => e.npcGuid == npcGuid);
-        if (entry == null) { entry = new GameStateData.NpcQueueEntry { npcGuid = npcGuid, taskIds = new System.Collections.Generic.List<int>(taskIds) }; d.receiverQueues.Add(entry); }
-        else { entry.taskIds = new System.Collections.Generic.List<int>(taskIds); }
+        if (entry == null) { entry = new GameStateData.NpcQueueEntry { npcGuid = npcGuid, taskIds = new System.Collections.Generic.List<int>(safeTaskIds) }; d.receiverQueues.Add(entry); }
+        else { entry.taskIds = new System.Collections.Generic.List<int>(safeTaskIds); }
         SaveState();
     }
 
