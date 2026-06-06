@@ -656,6 +656,7 @@ public class TaskEditorController : MonoBehaviour
 
         if (!ValidateForm(out var validationError))
         {
+            ShowValidationError(validationError);
             Debug.LogWarning("[TaskEditor] Validation error: " + validationError);
             return;
         }
@@ -665,6 +666,7 @@ public class TaskEditorController : MonoBehaviour
         var course = coursesContainer?.courses?.Find(c => c.id == contextCourseId);
         if (course == null)
         {
+            ShowValidationError("Не удалось сохранить задание: курс не найден.");
             Debug.LogError($"[TaskEditor] Save failed: course not found for courseId={contextCourseId}");
             return;
         }
@@ -753,11 +755,22 @@ public class TaskEditorController : MonoBehaviour
 
         if (toggleHintEnabled != null && toggleHintEnabled.isOn && (inputHintText == null || string.IsNullOrWhiteSpace(inputHintText.text)))
         {
-            error = "Hint text is required when hint is enabled";
+            error = "Введите текст подсказки или отключите подсказку.";
             return false;
         }
 
         return true;
+    }
+
+    private void ShowValidationError(string message)
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowError(UserErrorMessages.FromValidation(message));
+            return;
+        }
+
+        ErrorPopupController.Show(UserErrorMessages.FromValidation(message));
     }
 
     private void ApplyFormToModel(TaskModel model)

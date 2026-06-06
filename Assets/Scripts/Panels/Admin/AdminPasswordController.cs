@@ -47,6 +47,7 @@ public class AdminPasswordController : MonoBehaviour
     {
         if (passwordInput == null)
         {
+            ShowError("Поле ввода пароля не настроено.");
             Debug.LogError("AdminPasswordController: passwordInput not assigned");
             return;
         }
@@ -69,14 +70,22 @@ public class AdminPasswordController : MonoBehaviour
 
         if (_attemptsLeft <= 0)
         {
+            ShowError("Попытки входа закончились. Приложение будет закрыто.");
             Debug.LogWarning("AdminPasswordController: attempts exhausted");
             Application.Quit();
             return;
         }
 
+        ShowError($"Неверный пароль. Осталось попыток: {_attemptsLeft}.");
         passwordInput.text = "";
         passwordInput.Select();
         passwordInput.ActivateInputField();
+    }
+
+    private static void ShowError(string message)
+    {
+        if (UIManager.Instance != null) UIManager.Instance.ShowError(message);
+        else ErrorPopupController.Show(message);
     }
 
     private void OnCancel()

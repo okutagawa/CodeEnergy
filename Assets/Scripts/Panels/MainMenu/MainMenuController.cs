@@ -92,6 +92,7 @@ public class MainMenuController : MonoBehaviour
     {
         if (!HasSaveFile())
         {
+            ShowError("Сохранение не найдено. Начните новую игру.");
             Debug.LogWarning("[MainMenu] Continue pressed, but save file was not found.");
             RefreshContinueButtonState();
             return;
@@ -122,7 +123,7 @@ public class MainMenuController : MonoBehaviour
             settingsController.OpenSettings();
             return;
         }
-
+        ShowError("Не удалось открыть настройки. Панель настроек не найдена.");
         Debug.LogWarning("[MainMenu] Settings panel/controller not found in scene.");
     }
 
@@ -133,7 +134,14 @@ public class MainMenuController : MonoBehaviour
             UIManager.Instance.ShowAdminPassword();
             return;
         }
+        ShowError("Не удалось открыть вход администратора. Менеджер интерфейса не найден.");
         Debug.LogWarning("[MainMenu] UIManager.Instance is null. Cannot open admin password panel.");
+    }
+
+    private static void ShowError(string message)
+    {
+        if (UIManager.Instance != null) UIManager.Instance.ShowError(message);
+        else ErrorPopupController.Show(message);
     }
 
     public void OnExitClicked()

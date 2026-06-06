@@ -12,6 +12,7 @@ public class UIManager : MonoBehaviour
     public GameObject coursesPanel;
     public GameObject tasksPanel;
     public GameObject courseSelectPanel;
+    public GameObject errorPopupPanel;
 
     [Header("Optional / child panels")]
     public GameObject taskEditorPanel; 
@@ -66,6 +67,13 @@ public class UIManager : MonoBehaviour
                 courseSelectPanel = courseSelect.gameObject;
         }
 
+        if (errorPopupPanel == null)
+        {
+            var errorPopup = ErrorPopupController.Instance;
+            if (errorPopup != null)
+                errorPopupPanel = errorPopup.gameObject;
+        }
+
         if (taskEditorPanel == null)
         {
             var taskEditor = FindObjectOfType<TaskEditorController>(true);
@@ -112,17 +120,41 @@ public class UIManager : MonoBehaviour
     private void OnEnable()
     {
         SceneManager.sceneLoaded += HandleSceneLoaded;
+        Application.logMessageReceived += HandleLogMessageReceived;
     }
 
     private void OnDisable()
     {
         SceneManager.sceneLoaded -= HandleSceneLoaded;
+        Application.logMessageReceived -= HandleLogMessageReceived;
     }
 
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        errorPopupPanel = null;
         ResolveRuntimePanelReferences();
         CacheManagers();
+    }
+
+    private void HandleLogMessageReceived(string condition, string stackTrace, LogType type)
+    {
+        if (type != LogType.Error && type != LogType.Exception && type != LogType.Assert) return;
+        ShowError(UserErrorMessages.FromLog(condition, stackTrace, type));
+    }
+
+    public void ShowError(string message)
+    {
+        ResolveRuntimePanelReferences();
+
+        var popup = ErrorPopupController.Instance;
+        if (popup == null)
+        {
+            Debug.LogWarning("UIManager: ErrorPopupPanel was not found in scene.");
+            return;
+        }
+
+        errorPopupPanel = popup.gameObject;
+        popup.ShowMessage(UserErrorMessages.FromValidation(message));
     }
 
     // Попытаться получить ссылки на менеджеры (если объекты уже в сцене)
@@ -205,6 +237,7 @@ public class UIManager : MonoBehaviour
 
         if (controller == null)
         {
+            ShowError("Не удалось открыть выбор курса. Панель выбора курса не найдена.");
             Debug.LogError("UIManager: courseSelectPanel is not assigned and CourseSelectPanelController was not found in scene.");
             return;
         }
@@ -232,6 +265,7 @@ public class UIManager : MonoBehaviour
             return;
         }
 
+        ShowError("Не удалось открыть настройки. Панель настроек не найдена.");
         Debug.LogWarning("UIManager: settingsPanel is not assigned and SettingsController was not found.");
     }
 
@@ -267,6 +301,7 @@ public class UIManager : MonoBehaviour
 
         if (coursesPanel == null)
         {
+            ShowError("Не удалось открыть панель курсов. Панель курсов не найдена.");
             Debug.LogError("UIManager: coursesPanel is not assigned and CourseListManager was not found in scene");
             return;
         }
@@ -282,6 +317,7 @@ public class UIManager : MonoBehaviour
     {
         if (tasksPanel == null)
         {
+            ShowError("Не удалось открыть задания. Панель заданий не настроена.");
             Debug.LogError("UIManager: tasksPanel is not assigned in inspector");
             return;
         }
@@ -305,6 +341,7 @@ public class UIManager : MonoBehaviour
         }
         else
         {
+            ShowError("Не удалось открыть задания. Контроллер списка заданий не найден.");
             Debug.LogError("UIManager: TasksListManager not found in scene");
         }
     }
@@ -381,6 +418,7 @@ public class UIManager : MonoBehaviour
         var editor = GetFinalTestEditorPanelController();
         if (editor == null)
         {
+            ShowError("Не удалось открыть редактор итогового теста. Панель не найдена.");
             Debug.LogError("UIManager: FinalTestEditorPanelController not found in scene");
             return;
         }

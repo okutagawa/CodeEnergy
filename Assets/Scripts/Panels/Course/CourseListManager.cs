@@ -84,7 +84,7 @@ public class CourseListManager : MonoBehaviour
         var importPath = SaveService.GetTransferPath(fileName);
         if (!SaveService.ImportFile(importPath, fileName, validator, out var error))
         {
-            SetStatus($"Import failed for {fileName}: {error}", true);
+            SetStatus($"Не удалось импортировать {fileName}: {error}", true);
             return;
         }
 
@@ -110,7 +110,7 @@ public class CourseListManager : MonoBehaviour
         var exportPath = SaveService.GetTransferPath(fileName);
         if (!SaveService.ExportFile(fileName, exportPath, out var error))
         {
-            SetStatus($"Export failed for {fileName}: {error}", true);
+            SetStatus($"Не удалось экспортировать {fileName}: {error}", true);
             return;
         }
 
@@ -132,7 +132,7 @@ public class CourseListManager : MonoBehaviour
 
         if (!SaveService.RestoreLatestBackupBundle(out var restoredFrom, out var error))
         {
-            SetStatus($"Restore failed: {error}", true);
+            SetStatus($"Не удалось восстановить резервную копию: {error}", true);
             return;
         }
 
@@ -155,13 +155,18 @@ public class CourseListManager : MonoBehaviour
     {
         GameState.EnsureExists();
         if (GameState.Instance != null && GameState.Instance.IsAdminMode) return true;
-        SetStatus("Operation is available only in admin mode.", true);
+        SetStatus("Эта операция доступна только администратору.", true);
         return false;
     }
 
     private void SetStatus(string text, bool isError = false)
     {
         Debug.Log(isError ? "[Admin JSON] " + text : "[Admin JSON] " + text);
+        if (isError)
+        {
+            if (UIManager.Instance != null) UIManager.Instance.ShowError(UserErrorMessages.FromValidation(text));
+            else ErrorPopupController.Show(UserErrorMessages.FromValidation(text));
+        }
         if (operationStatusText != null)
         {
             operationStatusText.text = text;
@@ -171,8 +176,18 @@ public class CourseListManager : MonoBehaviour
 
     void OnAddCourseClicked()
     {
-        var title = inputCourseName.text.Trim();       
-        if (string.IsNullOrEmpty(title)) return;
+        if (inputCourseName == null)
+        {
+            SetStatus("Поле названия курса не настроено.", true);
+            return;
+        }
+
+        var title = inputCourseName.text.Trim();
+        if (string.IsNullOrEmpty(title))
+        {
+            SetStatus("Введите название курса.", true);
+            return;
+        }
 
         var model = new CourseModel { id = DataManager.NextCourseId(container), name = title };
         container.courses.Add(model);
@@ -222,9 +237,18 @@ public class CourseListManager : MonoBehaviour
 
     public void DeleteSelectedCourse()
     {
+        if (selectedCourseId < 0)
+        {
+            SetStatus("Выберите курс для удаления.", true);
+            return;
+        }
         if (selectedCourseId < 0) return;
         var model = container.courses.Find(x => x.id == selectedCourseId);
-        if (model == null) return;
+        if (model == null)
+        {
+            SetStatus("Выбранный курс не найден.", true);
+            return;
+        }
 
         if (instantiated.TryGetValue(selectedCourseId, out var go))
         {

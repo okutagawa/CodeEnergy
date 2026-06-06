@@ -64,6 +64,7 @@ public class FinalTestEditorPanelController : MonoBehaviour
         _course = _courses?.courses?.FirstOrDefault(c => c != null && c.id == courseId);
         if (_course == null)
         {
+            ShowValidationError("Ќе удалось открыть итоговый тест: курс не найден.");
             Debug.LogError($"[FinalTestEditor] Course not found: {courseId}");
             return;
         }
@@ -106,7 +107,11 @@ public class FinalTestEditorPanelController : MonoBehaviour
 
     private void SaveFinalTest()
     {
-        if (_course == null) return;
+        if (_course == null)
+        {
+            ShowValidationError("Ќе удалось сохранить итоговый тест: курс не найден.");
+            return;
+        }
         _draft.title = inputTestTitle != null ? inputTestTitle.text.Trim() : string.Empty;
         _draft.requiredCorrectAnswers = dropdownRequiredCorrect != null ? dropdownRequiredCorrect.value + 1 : Mathf.Min(1, _draft.questions.Count);
         DataManager.NormalizeFinalTestDefaults(_draft);
@@ -119,17 +124,29 @@ public class FinalTestEditorPanelController : MonoBehaviour
     {
         question = null;
         int answerCount = GetSelectedAnswerCount();
-        if (inputQuestionText == null || string.IsNullOrWhiteSpace(inputQuestionText.text)) return false;
+        if (inputQuestionText == null || string.IsNullOrWhiteSpace(inputQuestionText.text))
+        {
+            ShowValidationError("¬ведите текст вопроса итогового теста.");
+            return false;
+        }
 
         var answers = new List<string>();
         var correct = new List<int>();
         for (int i = 0; i < answerCount; i++)
         {
-            if (inputAnswers[i] == null || string.IsNullOrWhiteSpace(inputAnswers[i].text)) return false;
+            if (inputAnswers[i] == null || string.IsNullOrWhiteSpace(inputAnswers[i].text))
+            {
+                ShowValidationError($"«аполните ответ {i + 1}.");
+                return false;
+            }
             answers.Add(inputAnswers[i].text.Trim());
             if (toggleCorrect[i] != null && toggleCorrect[i].isOn) correct.Add(i);
         }
-        if (correct.Count == 0) return false;
+        if (correct.Count == 0)
+        {
+            ShowValidationError("¬ыберите хот€ бы один правильный ответ.");
+            return false;
+        }
 
         question = new FinalTestQuestionModel
         {
@@ -139,6 +156,17 @@ public class FinalTestEditorPanelController : MonoBehaviour
             correctAnswerIndexes = correct
         };
         return true;
+    }
+
+    private void ShowValidationError(string message)
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowError(UserErrorMessages.FromValidation(message));
+            return;
+        }
+
+        ErrorPopupController.Show(UserErrorMessages.FromValidation(message));
     }
 
     private void SelectQuestion(int index)

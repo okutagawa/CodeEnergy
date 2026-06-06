@@ -29,6 +29,7 @@ public class CourseSelectPanelController : MonoBehaviour
     [TextArea(2, 4)]
     public string defaultDescription = "Выберите курс из списка, который будет загружен для новой игры.";
 
+
     [TextArea(2, 4)]
     public string emptyCoursesMessage = "Курсы не найдены. Создайте курс в админ-панели.";
 
@@ -239,6 +240,8 @@ public class CourseSelectPanelController : MonoBehaviour
     {
         if (isError)
         {
+            if (UIManager.Instance != null) UIManager.Instance.ShowError(UserErrorMessages.FromValidation(message));
+            else ErrorPopupController.Show(UserErrorMessages.FromValidation(message));
             Debug.LogWarning("[CourseSelectPanelController] " + message);
         }
         else
