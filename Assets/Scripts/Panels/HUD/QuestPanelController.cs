@@ -14,6 +14,10 @@ public class QuestPanelController : MonoBehaviour
     [SerializeField] private string noQuestDescription = "";
     [SerializeField] private bool hideWhenNoQuest;
 
+    [Header("Completion text")]
+    [SerializeField] private string allQuestsCompletedTitle = "Все задания завершены.";
+    [SerializeField] private string allQuestsCompletedDescription = "Пройдите к порталу для активации итогового теста.";
+
     private void OnEnable()
     {
         TaskAssignmentManager.OnActiveQuestChanged += HandleActiveQuestChanged;
@@ -45,9 +49,10 @@ public class QuestPanelController : MonoBehaviour
     {
         if (task == null)
         {
-            SetPanelState(hasTask: false);
-            SetTextSafe(questTitleText, noQuestTitle);
-            SetTextSafe(questDescriptionText, noQuestDescription);
+            bool allQuestsCompleted = AreAllQuestsCompleted();
+            SetPanelState(hasTask: allQuestsCompleted);
+            SetTextSafe(questTitleText, allQuestsCompleted ? allQuestsCompletedTitle : noQuestTitle);
+            SetTextSafe(questDescriptionText, allQuestsCompleted ? allQuestsCompletedDescription : noQuestDescription);
             return;
         }
 
@@ -73,6 +78,12 @@ public class QuestPanelController : MonoBehaviour
     {
         if (panelRoot != null)
             panelRoot.SetActive(!hideWhenNoQuest || hasTask);
+    }
+
+    private bool AreAllQuestsCompleted()
+    {
+        var manager = TaskAssignmentManager.Instance ?? FindObjectOfType<TaskAssignmentManager>();
+        return manager != null && manager.AreAllSelectedCourseTasksCompleted();
     }
 
     private static void SetTextSafe(Text target, string value)

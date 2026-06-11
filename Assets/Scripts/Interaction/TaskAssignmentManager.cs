@@ -23,6 +23,16 @@ public class TaskAssignmentManager : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        GameState.OnTaskCompleted += HandleTaskCompleted;
+    }
+
+    private void OnDisable()
+    {
+        GameState.OnTaskCompleted -= HandleTaskCompleted;
+    }
+
     void Start()
     {
         Debug.Log("[TAM] Start: loading GameState and building NPC index");
@@ -277,6 +287,27 @@ public class TaskAssignmentManager : MonoBehaviour
         return !string.IsNullOrEmpty(npcGuid) && _giverTasksByNpc.TryGetValue(npcGuid, out var list) && list != null && list.Count > 0;
     }
 
+    public bool AreAllSelectedCourseTasksCompleted()
+    {
+        var gameState = GameState.Instance;
+        if (gameState == null) return false;
+
+        int selectedCourseId = gameState.GetData().selectedCourseId;
+        if (selectedCourseId <= 0) return false;
+
+        var course = DataManager.LoadCourses()?.courses?.FirstOrDefault(c => c != null && c.id == selectedCourseId);
+        if (course == null || course.taskIds == null || !course.taskIds.Any(id => id >= 0)) return false;
+
+        return FinalTestController.AreAllCourseTasksCompleted(course);
+    }
+
+    private void HandleTaskCompleted(int taskId)
+    {
+        RemoveTaskFromAllQueuesById(taskId);
+        ExportQueuesToGameState();
+        NotifyGlobalActiveQuestChanged();
+    }
+
     private void ApplySavedQueuesAndCompletedTasks(GameStateData state, List<TaskModel> allTasks)
     {
         if (state == null) return;
@@ -379,12 +410,11 @@ public class TaskAssignmentManager : MonoBehaviour
                 return;
             }
         }
-        // nothing active — do not invoke with null to avoid hiding UI unexpectedly
+        SafeInvokeActiveQuestChanged(null);
     }
 
     private void SafeInvokeActiveQuestChanged(TaskModel active)
     {
-        if (active == null) return;
         try
         {
             OnActiveQuestChanged?.Invoke(active);
